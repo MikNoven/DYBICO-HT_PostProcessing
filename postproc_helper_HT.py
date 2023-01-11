@@ -47,7 +47,8 @@ def sort_data_by_condition(data):
 #%% extract force and target and time data 
 def extract_as_arrays(con_data):
     # we find the shortest trial lenght (due to jitter time inconsistencies)
-    shortest_trial = min([len(con_data['targets'][j]) for j in range(len(con_data))])
+    
+    shortest_trial = min([len(con_data['time'][j]) for j in range(len(con_data))])
     
     # we extract the force and find the average trace 
     import numpy as np 
@@ -65,10 +66,124 @@ def extract_as_arrays(con_data):
     # get time data 
     time = np.vstack([np.asarray(con_data['time'][j][:shortest_trial]) for j in range(len(con_data))]) 
 
-    
+    #Shortest trial is the index at which the shortest end. 
     return (shortest_trial, force_L, force_R, target_L, target_R, time)
-    
+  
 
+#%% rebase force trace to match template time
+def rebase_force(t_new,t_new_dur,t_orig,t_orig_dur,force_orig):
+    import numpy as np
+    #Convert to arrays.
+    t_orig=np.asarray(t_orig)
+    t_orig = np.asarray([(t_orig[j]-t_orig[0]) for j in range(len(t_orig))])
+    force_orig=np.asarray(force_orig)
+    force_new=np.zeros(len(t_new))
+    
+    t_orig_itr = 0
+    for n in range(0,len(t_new)):
+        tmp_tnew = t_new[n]
+        if n > len(t_new)-1 or t_orig_itr > len(t_orig)-1:
+            break
+        elif n == len(t_new)-1:
+            tmp_tnew_ts = t_new_dur-t_new[n]
+        else:
+            tmp_tnew_ts = t_new[n+1]-t_new[n]
+        stop = False
+        while not stop: 
+            tmp_torig = t_orig[t_orig_itr]
+            if t_orig_itr == len(t_orig)-1:
+                tmp_torig_ts = t_orig_dur-t_orig[t_orig_itr]
+            else:
+                tmp_torig_ts = t_orig[t_orig_itr+1]-t_orig[t_orig_itr]
+                
+            if tmp_tnew > tmp_torig and t_new[n]+tmp_tnew_ts > t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('1 '+str(n)+' '+str(((t_orig[t_orig_itr]+tmp_torig_ts-tmp_tnew)/tmp_tnew_ts)))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]*((t_orig[t_orig_itr]+tmp_torig_ts-tmp_tnew)/tmp_tnew_ts)
+                t_orig_itr = t_orig_itr + 1
+            elif tmp_tnew > tmp_torig and t_new[n]+tmp_tnew_ts < t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('2 '+str(n)+' '+str(tmp_tnew_ts/tmp_torig_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]#Leave entire in as it completely fills the element.
+                stop = True
+            elif tmp_tnew < tmp_torig and t_new[n]+tmp_tnew_ts < t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('3 '+str(n)+' '+str((t_new[n]+tmp_tnew_ts-tmp_torig)/tmp_tnew_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]*((t_new[n]+tmp_tnew_ts-tmp_torig)/tmp_tnew_ts)
+                stop = True
+            elif tmp_tnew < tmp_torig and t_new[n]+tmp_tnew_ts > t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('4 '+str(n)+' '+str(tmp_torig_ts/tmp_tnew_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]*(tmp_torig_ts/tmp_tnew_ts)
+                t_orig_itr = t_orig_itr + 1
+            elif tmp_tnew == tmp_torig and t_new[n]+tmp_tnew_ts == t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('5 '+str(n)+' '+str(1))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]
+                t_orig_itr = t_orig_itr + 1
+                stop = True
+            elif tmp_tnew == tmp_torig and t_new[n]+tmp_tnew_ts > t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('6 '+str(n)+' '+str(tmp_torig_ts/tmp_tnew_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]*(tmp_torig_ts/tmp_tnew_ts)
+                t_orig_itr = t_orig_itr + 1
+            elif tmp_tnew == tmp_torig and t_new[n]+tmp_tnew_ts < t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('7 '+str(n)+' '+str(tmp_tnew_ts/tmp_torig_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]#Leave entire in as it completely fills the element.
+                stop = True
+            elif tmp_tnew > tmp_torig and t_new[n]+tmp_tnew_ts == t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('8 '+str(n)+' '+str(tmp_tnew_ts/tmp_torig_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]#Leave entire in as it completely fills the element.
+                t_orig_itr = t_orig_itr + 1
+                stop = True
+            elif tmp_tnew < tmp_torig and t_new[n]+tmp_tnew_ts == t_orig[t_orig_itr]+tmp_torig_ts:
+                #print('9 '+str(n)+' '+str(tmp_torig_ts/tmp_tnew_ts))
+                force_new[n] = force_new[n]+force_orig[t_orig_itr]*(tmp_torig_ts/tmp_tnew_ts)
+                t_orig_itr = t_orig_itr + 1
+                stop = True
+                
+            if t_orig_itr > len(t_orig)-1:
+                break
+        
+                
+    #Fix the final timestep
+    return force_new.tolist()
+
+#%% extract force and target and time data 
+def extract_as_arrays_rebase(con_data):
+    import numpy as np 
+    # we find the shortest trial lenght (due to jitter time inconsistencies and sampling weirdness)
+    indx_shortest = 0
+    shortest_time = 2.0
+    shortest_dur = 0
+    for j in range(len(con_data)):
+        tmp_ts = con_data['duration'][j]
+        if tmp_ts < shortest_time:            
+            #print(str(j))
+            shortest_time = tmp_ts
+            indx_shortest=j
+            shortest_dur = con_data['duration'][j]
+    
+    
+    #Create t_new
+    t = np.asarray(con_data['time'][indx_shortest])
+    time = np.asarray([(t[j]-t[0]) for j in range(len(t))])
+    
+    forces_L = []
+    forces_R = []
+    
+    for m in range(len(con_data)):
+        tmp_ts = (con_data['time'][m][-1]-con_data['time'][m][0])/len(con_data['time'][m])
+        if m == indx_shortest:
+            forces_L.append(con_data['force_L'][m])
+            forces_R.append(con_data['force_R'][m])
+        else:
+            forces_L.append(rebase_force(time,shortest_dur,con_data['time'][m],con_data['duration'][m],con_data['force_L'][m]))
+            forces_R.append(rebase_force(time,shortest_dur,con_data['time'][m],con_data['duration'][m],con_data['force_R'][m]))
+    
+    # we extract the force and find the average trace 
+    force_L = np.vstack(forces_L)
+    force_R = np.vstack(forces_R)
+    
+    target_L = [con_data['targets'][indx_shortest][k][0] for k in range(len(time))]
+    target_R = [con_data['targets'][indx_shortest][k][1] for k in range(len(time))]
+    
+    return (force_L, force_R, target_L, target_R, time)
+    
 
 #%% get list of DATA files in log folder
 def get_DATAfiles(logdir):
@@ -311,10 +426,9 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
     for c in range(len(con_matrix)):
         con_data = con_matrix[c]
         con_data.index = range(len(con_data))     
-        (shortest_trial, force_L, force_R, target_L, target_R, time) = pph.extract_as_arrays(con_data)
-        t = [(time[j]-time[j][0]) for j in range(len(time))] #Difference from before! Earlier only [0] was used. 
+        (force_L, force_R, target_L, target_R, time) = pph.extract_as_arrays_rebase(con_data)
     
-        plotdir=os.path.join(postprocpath,'Run_'+str(k+1)+'_'+con_data['targetTrial'][0])
+        plotdir=os.path.join(postprocpath,'Sess_'+str(k+1)+'_'+con_data['targetTrial'][0])
         if os.path.isdir(plotdir) and overwrite:
             shutil.rmtree(plotdir)
         os.makedirs(plotdir)
@@ -328,10 +442,10 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
             plt.ylabel('Maxforce')
             plt.yticks([0.25, 0.5, 0.75, 1.0, 1.25], ['2.5%', '5%', '7.5%', '10%', '12.5%'])
             plt.title(str(x)+' '+con_data['targetTrial'][0])
-            plt.plot(t[x],force_R[x],'r',label="Right force")
-            plt.plot(t[x],target_R[x], 'r--',label="Right target")
-            plt.plot(t[x],force_L[x], 'b',label="Left force")
-            plt.plot(t[x],target_L[x], 'b--',label="Left target")   
+            plt.plot(time,force_R[x],'r',label="Right force")
+            plt.plot(time,target_R, 'r--',label="Right target")
+            plt.plot(time,force_L[x], 'b',label="Left force")
+            plt.plot(time,target_L, 'b--',label="Left target")   
             plt.legend()
             #plt.show()
             #clock.sleep(1)
@@ -340,11 +454,11 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
             plt.clf()
             
         # #Make GIF
-        if os.path.isfile(os.path.join(postprocpath,'Run_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif')) and overwrite: 
-            os.remove(os.path.join(postprocpath,'Run_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif'))
+        if os.path.isfile(os.path.join(postprocpath,'Sess_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif')) and overwrite: 
+            os.remove(os.path.join(postprocpath,'Sess_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif'))
             
-        if not os.path.isfile(os.path.join(postprocpath,'Run_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif')):
-            with imageio.get_writer(os.path.join(postprocpath,'Run_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif'), mode='I') as writer:
+        if not os.path.isfile(os.path.join(postprocpath,'Sess_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif')):
+            with imageio.get_writer(os.path.join(postprocpath,'Sess_'+str(k+1)+'_'+con_data['targetTrial'][0]+'.gif'), mode='I') as writer:
                 for cond in range(len(con_data)):
                     for frame in range(10):
                         imagefile = os.path.join(plotdir,str(cond)+'_'+str(frame)+'.png')
@@ -357,199 +471,127 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
 #%%Get RT, ACC and trajectory diff measurements from trial or average-level data MN
 #Send in condition-specific data and calculated t from trial, run and subject.
 #Get values of RT and ACC as well as impacttime and impact-boolean from each trial.
-def get_trial_behaviour(cond, force_L, force_R, target_L, target_R, t):
+def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
     import numpy as np
-    import postproc_helper_HT as pph
+    
+    force_L = np.array(force_L)
+    force_R = np.array(force_R)
+    target_L = np.array(target_L)
+    target_R = np.array(target_R)
+    t = np.array(t)
     
     tw_ACC = 0.5 #The timewindow for calculating ACC.
     tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
-    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact. 
+    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
+                        # and for time on target. 
     ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
-    tw_diff = 0.75 #Time window measuring the difference between the trajectories measured from (mean of) RTstart.
     der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
-    indxstep_diff = int(np.round(tw_diff/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
     
-    targetdir_L,targetdir_R = pph.get_target_directions(cond)
-
     ##################Reaction time############################
     #Derivative          
     React_L = 0
     indx_react_L = 0
     deriv_L = np.diff(force_L)/np.diff(t)
-    if targetdir_L != 0:
-        while React_L==0:
-            if indx_react_L==len(force_L)-1:
-                break
-            
-            if abs(deriv_L[indx_react_L]) > der_thr:
-                React_L=t[indx_react_L]
-                break
-            else: 
-                indx_react_L += 1
+    while React_L==0:
+        if indx_react_L==len(force_L)-1:
+            break
+        
+        if abs(deriv_L[indx_react_L]) > der_thr:
+            React_L=t[indx_react_L]
+            break
+        else: 
+            indx_react_L += 1
 
     React_R = 0
     indx_react_R = 0
     deriv_R = np.diff(force_R)/np.diff(t)
-    if targetdir_R != 0:
-        while React_R==0:
-            if indx_react_R==len(force_R)-1:
-                break
-            
-            if abs(deriv_R[indx_react_R]) > der_thr:
-                React_R=t[indx_react_R]
-                break
-            else: 
-                indx_react_R += 1   
+    while React_R==0:
+        if indx_react_R==len(force_R)-1:
+            break
+        
+        if abs(deriv_R[indx_react_R]) > der_thr:
+            React_R=t[indx_react_R]
+            break
+        else: 
+            indx_react_R += 1   
 
-    ##################Start RT############################
-    #Derivative
-    RTstart_L = 0
-    indx_start_L = 0
-    if targetdir_L != 0:
-        while RTstart_L==0:
-            if indx_start_L==len(force_L)-1:
-                break
-            
-            if targetdir_L*deriv_L[indx_start_L] > der_thr:
-                RTstart_L=t[indx_start_L]
-                break
-            else: 
-                indx_start_L += 1
-
-    RTstart_R = 0
-    indx_start_R = 0
-    if targetdir_R != 0:
-        while RTstart_R==0:
-            if indx_start_R==len(force_R)-1:
-                break
-            
-            if targetdir_R*deriv_R[indx_start_R] > der_thr:
-                RTstart_R=t[indx_start_R]
-                break
-            else: 
-                indx_start_R += 1   
-    
-    ##################Performance score###############################
-    performance_score_L = sum(abs(force_L[indx_start_L:] - target_L[indx_start_L:]))
-    performance_score_R = sum(abs(force_R[indx_start_R:] - target_R[indx_start_R:]))
+    ##################Time on target###############################
+    time_on_target_L = 0
+    for itr in range(len(force_L)):
+        if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
+            time_on_target_L = time_on_target_L+1
+    time_on_target_L=time_on_target_L/len(force_L)
+        
+    time_on_target_R = 0
+    for itr in range(len(force_R)):
+        if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
+            time_on_target_R = time_on_target_R+1
+    time_on_target_R=time_on_target_R/len(force_R)
     
     ##################Trajectory diff####################
-    force_diff = 0
+    diffstart_indx = 0
+    diffstop_indx = 0
+    for itr in range(len(t)):
+        if t[itr] >= 0.25 and diffstart_indx == 0:
+            diffstart_indx = itr
+        if t[itr] >= 0.75 and diffstop_indx == 0:
+            diffstop_indx = itr
+    force_diff = sum(force_R[diffstart_indx:diffstop_indx]-force_L[diffstart_indx:diffstop_indx])
     
-    if targetdir_L == 0:
-        force_diff = sum(abs(force_L[indx_react_R:indx_react_R+indxstep_diff]-force_R[indx_react_R:indx_react_R+indxstep_diff]))
-    elif targetdir_R == 0:
-        force_diff = sum(abs(force_L[indx_react_L:indx_react_L+indxstep_diff]-force_R[indx_react_L:indx_react_L+indxstep_diff]))
-    elif targetdir_L == 0 and targetdir_R == 0:
-        force_diff = sum(abs(force_L-force_R))
-    else:
-        if indx_react_L < indx_react_R:
-            force_diff = sum(abs(force_L[indx_react_L:indx_react_L+indxstep_diff]-force_R[indx_react_L:indx_react_L+indxstep_diff]))
-        else:
-            force_diff = sum(abs(force_L[indx_react_R:indx_react_R+indxstep_diff]-force_R[indx_react_R:indx_react_R+indxstep_diff]))
-    
-    
-    ##################ACC from impact###############################
-    end_indx_L,end_indx_R = pph.get_end_indx(cond,target_L,target_R)
-    
+    ##################ACC from impact###############################    
     
     impact_L = 0
     ACCimpact_L = 0
     impacttime_L = 0
-    for itr in range(indx_start_L,end_indx_L):
+    for itr in range(len(force_L)):
         if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_L = sum(abs(force_L[itr:end_indx_L]-target_L[itr:end_indx_L]))/((end_indx_L-itr)*ts)
-            impacttime_L = itr*ts
+            ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+            impacttime_L = t[itr]
             impact_L = 1
             break
 
     impact_R = 0
     ACCimpact_R = 0
     impacttime_R = 0
-    for itr in range(indx_start_R,end_indx_R):
+    for itr in range(len(force_R)):
         if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_R = sum(abs(force_R[itr:end_indx_R]-target_R[itr:end_indx_R]))/((end_indx_R-itr)*ts)
-            impacttime_R = itr*ts
+            ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+            impacttime_R = t[itr]
             impact_R = 1
             break
     
-    
-    ##################End RT#############################
-    endt0_L = end_indx_L*ts
-    endt0_R = end_indx_R*ts
-    #Get RTend_L
-    RTend_L=0
-    if end_indx_L > 0: #If it's a condition where there's a target
-        while RTend_L==0:
-            if end_indx_L==len(force_L)-1:
-                break
-            
-            if (-1)*targetdir_L*deriv_L[end_indx_L] > der_thr:
-                RTend_L=t[end_indx_L]-endt0_L
-                break
-            
-            end_indx_L += 1
-            
-    #Get RTend_R
-    RTend_R=0
-    if end_indx_R > 0: #If it's a condition where there's a target
-        while RTend_R==0:
-            if end_indx_R==len(force_R)-1:
-                break
-            
-            if (-1)*targetdir_R*deriv_R[end_indx_R] > der_thr:
-                RTend_R=t[end_indx_R]-endt0_R
-                break
-            
-            end_indx_R += 1
-            
-    ##################Impacttime for baseline#############################
-    impacttime_bl_L = 0
-    impacttime_bl_R = 0
-    
-    if end_indx_L > 0: #If it's a condition where there's a target
-        for itr in range(end_indx_L,len(force_L)):
-            if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
-                impacttime_bl_L = itr*ts-endt0_L
-                break
-
-    if end_indx_R > 0: #If it's a condition where there's a target
-        for itr in range(end_indx_R,len(force_R)):
-            if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
-                impacttime_bl_R = itr*ts-endt0_R
-                break        
-    
-    
     ##################ACC in timewindow#############################
-    ACCtw_L = sum(abs(np.array(force_L[end_indx_L-indxstep_ACC:end_indx_L])-np.array(target_L[end_indx_L-indxstep_ACC:end_indx_L])))
-    ACCtw_R = sum(abs(np.array(force_R[end_indx_R-indxstep_ACC:end_indx_R])-np.array(target_R[end_indx_R-indxstep_ACC:end_indx_R])))  
+    ACCtw_L = sum(abs(np.array(force_L[-indxstep_ACC:])-np.array(target_L[-indxstep_ACC:])))
+    ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:])))  
     
     
     
-    return React_L, React_R, RTstart_L, RTstart_R, RTend_L, RTend_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
-        ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, impacttime_bl_L, impacttime_bl_R, \
-        performance_score_L, performance_score_R, force_diff
+    return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
+        ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
+        time_on_target_L, time_on_target_R, force_diff
 
 #%%Get the behavioural parameters from HT data
-def get_trial_behaviour_HT(cond, force_L, force_R, target_L, target_R, t):
+def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
     import numpy as np
-    import postproc_helper_HT as pph
     
+    force_L = np.array(force_L)
+    force_R = np.array(force_R)
+    target_L = np.array(target_L)
+    target_R = np.array(target_R)
+    t = np.array(t)
     tw_ACC = 0.5 #The timewindow for calculating ACC.
     tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
-    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact. 
+    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
+                        # and for time on target. 
     ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
-    tw_diff = 0.75 #Time window measuring the difference between the trajectories measured from (mean of) RTstart.
     der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
-    indxstep_diff = int(np.round(tw_diff/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
     
-    targetdir_L,targetdir_R = pph.get_target_directions(cond)
 
     ##################Reaction time############################
     #Derivative          
@@ -579,135 +621,109 @@ def get_trial_behaviour_HT(cond, force_L, force_R, target_L, target_R, t):
         else: 
             indx_react_R += 1   
 
-    ##################Start RT############################
-    #Derivative
-    RTstart_L = 0
-    indx_start_L = 0
-    if targetdir_L != 0:
-        while RTstart_L==0:
-            if indx_start_L==len(force_L)-1:
-                break
-            
-            if targetdir_L*deriv_L[indx_start_L] > der_thr:
-                RTstart_L=t[indx_start_L]
-                break
-            else: 
-                indx_start_L += 1
-
-    RTstart_R = 0
-    indx_start_R = 0
-    if targetdir_R != 0:
-        while RTstart_R==0:
-            if indx_start_R==len(force_R)-1:
-                break
-            
-            if targetdir_R*deriv_R[indx_start_R] > der_thr:
-                RTstart_R=t[indx_start_R]
-                break
-            else: 
-                indx_start_R += 1   
-    
-    ##################Performance score###############################
-    performance_score_L = sum(abs(force_L[indx_start_L:] - target_L[indx_start_L:]))
-    performance_score_R = sum(abs(force_R[indx_start_R:] - target_R[indx_start_R:]))
+    ##################Time on target###############################
+    time_on_target_L = 0
+    for itr in range(len(force_L)):
+        if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
+            time_on_target_L = time_on_target_L+1
+    time_on_target_L=time_on_target_L/len(force_L)
+        
+    time_on_target_R = 0
+    for itr in range(len(force_R)):
+        if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
+            time_on_target_R = time_on_target_R+1
+    time_on_target_R=time_on_target_R/len(force_R)
     
     ##################Trajectory diff####################
-    force_diff = 0
+    diffstart_indx = 0
+    diffstop_indx = 0
+    for itr in range(len(t)):
+        if t[itr] >= 0.25 and diffstart_indx == 0:
+            diffstart_indx = itr
+        if t[itr] >= 0.75 and diffstop_indx == 0:
+            diffstop_indx = itr
+    force_diff = sum(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx]))
     
-    if targetdir_L == 0:
-        force_diff = sum(abs(force_L[indx_react_R:indx_react_R+indxstep_diff]-force_R[indx_react_R:indx_react_R+indxstep_diff]))
-    elif targetdir_R == 0:
-        force_diff = sum(abs(force_L[indx_react_L:indx_react_L+indxstep_diff]-force_R[indx_react_L:indx_react_L+indxstep_diff]))
-    elif targetdir_L == 0 and targetdir_R == 0:
-        force_diff = sum(abs(force_L-force_R))
-    else:
-        if indx_react_L < indx_react_R:
-            force_diff = sum(abs(force_L[indx_react_L:indx_react_L+indxstep_diff]-force_R[indx_react_L:indx_react_L+indxstep_diff]))
-        else:
-            force_diff = sum(abs(force_L[indx_react_R:indx_react_R+indxstep_diff]-force_R[indx_react_R:indx_react_R+indxstep_diff]))
-    
-    
-    ##################ACC from impact###############################
-    end_indx_L,end_indx_R = pph.get_end_indx(cond,target_L,target_R)
-    
+    ##################ACC from impact###############################    
     
     impact_L = 0
     ACCimpact_L = 0
     impacttime_L = 0
-    for itr in range(indx_react_L,len(t)-indxstep_sw):
+    for itr in range(len(force_L)):
         if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_L = sum(abs(force_L[itr:end_indx_L]-target_L[itr:end_indx_L]))/((end_indx_L-itr)*ts)
-            impacttime_L = itr*ts
+            ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+            impacttime_L = t[itr]
             impact_L = 1
             break
 
     impact_R = 0
     ACCimpact_R = 0
     impacttime_R = 0
-    for itr in range(indx_react_R,len(t)-indxstep_sw):
+    for itr in range(len(force_R)):
         if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_R = sum(abs(force_R[itr:end_indx_R]-target_R[itr:end_indx_R]))/((end_indx_R-itr)*ts)
-            impacttime_R = itr*ts
+            ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+            impacttime_R = t[itr]
             impact_R = 1
             break
     
-    
-    ##################End RT#############################
-    endt0_L = end_indx_L*ts
-    endt0_R = end_indx_R*ts
-    #Get RTend_L
-    RTend_L=0
-    if end_indx_L > 0: #If it's a condition where there's a target
-        while RTend_L==0:
-            if end_indx_L==len(force_L)-1:
-                break
-            
-            if (-1)*targetdir_L*deriv_L[end_indx_L] > der_thr:
-                RTend_L=t[end_indx_L]-endt0_L
-                break
-            
-            end_indx_L += 1
-            
-    #Get RTend_R
-    RTend_R=0
-    if end_indx_R > 0: #If it's a condition where there's a target
-        while RTend_R==0:
-            if end_indx_R==len(force_R)-1:
-                break
-            
-            if (-1)*targetdir_R*deriv_R[end_indx_R] > der_thr:
-                RTend_R=t[end_indx_R]-endt0_R
-                break
-            
-            end_indx_R += 1
-            
-    ##################Impacttime for baseline#############################
-    impacttime_bl_L = 0
-    impacttime_bl_R = 0
-    
-    if end_indx_L > 0: #If it's a condition where there's a target
-        for itr in range(end_indx_L,len(force_L)):
-            if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
-                impacttime_bl_L = itr*ts-endt0_L
-                break
-
-    if end_indx_R > 0: #If it's a condition where there's a target
-        for itr in range(end_indx_R,len(force_R)):
-            if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
-                impacttime_bl_R = itr*ts-endt0_R
-                break        
-    
-    
     ##################ACC in timewindow#############################
     ACCtw_L = sum(abs(np.array(force_L[-indxstep_ACC:])-np.array(target_L[-indxstep_ACC:])))
-    ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:])))  
+    ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:]))) 
     
+    ##################Trial success#############################
+    trial_success_time_L=0
+    trial_success_time_R=0
+    trial_success_time_both=0
+    L_success_indx_start = 0
+    R_success_indx_start = 0
+    both_success_indx_start = 0
+    stability_threshold=0.3
+    #Right now it can occur more than once so start with three separate loops
+    #Both
+    for itr in range(len(force_L)):
+        tmp_diff_L = abs(force_L[itr]-target_L[itr])
+        tmp_diff_R = abs(force_R[itr]-target_R[itr])
+        if  tmp_diff_L <= closeness_thr and  tmp_diff_R <= closeness_thr:
+            if both_success_indx_start == 0:
+                both_success_indx_start = itr
+        else:
+            both_success_indx_start = 0
+            
+        if both_success_indx_start!=0 and t[itr]-t[both_success_indx_start] >= stability_threshold:
+            trial_success_time_both=t[itr]
+            break
     
-    
-    return React_L, React_R, RTstart_L, RTstart_R, RTend_L, RTend_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
-        ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, impacttime_bl_L, impacttime_bl_R, \
-        performance_score_L, performance_score_R, force_diff
+    #Left
+    for itr in range(len(force_L)):
+        if  abs(force_L[itr]-target_L[itr]) <= closeness_thr: 
+            if L_success_indx_start == 0:
+                L_success_indx_start = itr  
+        else:
+            L_success_indx_start = 0
+            
+        #For now 200 ms cutoff
+        if L_success_indx_start!=0 and t[itr]-t[L_success_indx_start] >= stability_threshold:
+            trial_success_time_L=t[itr]
+            break
 
+            
+    #Right
+    for itr in range(len(force_R)):
+        if  abs(force_R[itr]-target_R[itr]) <= closeness_thr: 
+            if R_success_indx_start == 0:
+                R_success_indx_start = itr  
+        else:
+            R_success_indx_start = 0
+            
+        if R_success_indx_start!=0 and t[itr]-t[R_success_indx_start] >= stability_threshold:
+            trial_success_time_R=t[itr]
+            break
+                        
+
+    
+    return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
+        ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
+        time_on_target_L, time_on_target_R, force_diff, trial_success_time_L, trial_success_time_R, trial_success_time_both
         
 #%%Get the variance in the last 500ms of each trial. MN
 def get_trial_variance_and_error(condition_data):

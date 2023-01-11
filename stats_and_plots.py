@@ -14,9 +14,11 @@ import postproc_helper_HT as pph
 
 ##############Set paths and initialize parameters###########
 #Change to where you have your data.
-path='/Users/gdf724/Data/ReScale/HomeTrainingTest' 
+#path='/Users/gdf724/Data/ReScale/HomeTrainingTest' 
+path='/Volumes/io.erda.dk/NEXS/Sections/MN/VIP_Projects/ReScale/ReScale2/04_Data/01_DataFiles/00_Raw_Data'
 #Change to where you want your statistics table.
-savepath='/Users/gdf724/Code/Rprojects/ReScale_HT'
+#savepath='/Users/gdf724/Code/Rprojects/ReScale_HT'
+savepath='/Volumes/io.erda.dk/NEXS/Sections/MN/VIP_Projects/ReScale/ReScale2/04_Data/01_DataFiles/01_Data_Process_and_Analysis_Steps/HomeTraining/'
 #List all subjects to process.
 list_of_subjs=['P001','P002']
 
