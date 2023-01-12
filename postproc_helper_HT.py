@@ -5,6 +5,8 @@ Created on Mon Nov 29 15:27:24 2021
 @author: dzn332
 """
 
+import numpy as np
+import os
 
 #%% drop non-trials 
 def drop_non_trials(file):
@@ -539,7 +541,7 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
             diffstart_indx = itr
         if t[itr] >= 0.75 and diffstop_indx == 0:
             diffstop_indx = itr
-    force_diff = sum(force_R[diffstart_indx:diffstop_indx]-force_L[diffstart_indx:diffstop_indx])
+    force_diff = sum(abs(force_R[diffstart_indx:diffstop_indx]-force_L[diffstart_indx:diffstop_indx]))
     
     ##################ACC from impact###############################    
     
@@ -642,7 +644,7 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
             diffstart_indx = itr
         if t[itr] >= 0.75 and diffstop_indx == 0:
             diffstop_indx = itr
-    force_diff = sum(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx]))
+    force_diff = sum(abs(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx])))
     
     ##################ACC from impact###############################    
     
@@ -815,8 +817,54 @@ def get_target_directions(cond):
         
     return targetdir_L,targetdir_R
 
+#%%Get information from physical activity surveys. 
+def get_survey_answers(HT_dir):
+    
+    def time_answer_reader(line):
+        stop = False
+        tim = ''
+        t_itr=line.find(':')+2
+        if t_itr > len(line)-1:
+            stop = True
+        while not stop:
+            if line[t_itr]=='\n':
+                return '0'
+            elif line[t_itr]==' ':
+                stop = True
+            elif line[t_itr]==',':
+                tim=tim+'.'
+                t_itr=t_itr+1
+            else:
+                tim=tim+line[t_itr]
+                t_itr=t_itr+1
+            if t_itr >= len(line)-1:
+                stop = True
+        return tim
+                
+                
+    with open(os.path.join(HT_dir,'SurveyAnswers.txt')) as f:
+        lines = f.readlines()
+        
+    sleep_time = time_answer_reader(lines[0])      
+    sleep_quality = time_answer_reader(lines[1])    
+    bwalk = time_answer_reader(lines[2])
+    cardio = time_answer_reader(lines[3])
+    swim = time_answer_reader(lines[4])
+    wtrain = time_answer_reader(lines[5])
 
-
+    what_ot=''
+    if not lines[6][-1] == ' ':
+        ot = time_answer_reader(lines[6])
+        stop = False
+        str_itr=8
+        while not stop:
+            if lines[6][str_itr]==' ':
+                stop = True
+            else:
+                what_ot=what_ot+lines[6][str_itr]
+                str_itr=str_itr+1
+    
+    return sleep_time, sleep_quality, bwalk, cardio, swim, wtrain, ot, what_ot
 
 
 
