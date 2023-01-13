@@ -22,9 +22,9 @@ path='/Users/gdf724/Data/ReScale/HomeTrainingTest/'
 #List all subjects to process.
 list_of_subjs=['P001', 'P002', 'P003']
 #Do you want to make trial GIFs for each run and condition? 
-createGIFS = True 
+createGIFS = False 
 #Do you want to make average trajectory plots for each run and condition?
-doRunPlots = True
+doRunPlots = False
 
 ##############Postprocessing################################
 #Loop over subjects.
@@ -37,9 +37,9 @@ for i in range(len(list_of_subjs)):
         #Fix the data to the proper structure and in a PostProcessing-folder
         pph.make_PP_folder(sess)
         maxforce = pph.get_maxforce(sess)
-        if len(os.listdir(os.path.join(sess,'PostProcessing'))) < 2:
-            for blockfile in glob.glob(os.path.join(sess,'hometraining_output_*.pkl')):
-                pph.reshape_data(blockfile)
+        #if len(os.listdir(os.path.join(sess,'PostProcessing'))) < 2:
+        for blockfile in glob.glob(os.path.join(sess,'hometraining_output_*.pkl')):
+            pph.reshape_data(blockfile)
                 
         DATAfiles = pph.get_DATAfiles(sess)
         
