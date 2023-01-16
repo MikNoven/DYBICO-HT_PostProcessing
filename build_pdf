@@ -16,32 +16,23 @@ class PDF(FPDF):
         self.WIDTH = 210
         self.HEIGHT = 297
         
-    def header(self):
-        # Custom logo and positioning
-        # Create an `assets` folder and put any wide and short image inside
-        # Name the image `logo.png`
-        self.set_font('Arial', 'B', 11)
-        self.cell(self.WIDTH - 80)
-        self.cell(60, 1, 'Training Report', 0, 0, 'R')
-        self.ln(20)
-        
-    def footer(self):
-        # Page numbers in the footer
-        self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.set_text_color(128)
-        self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
-
     def page_body(self, images):
         # Determine how many plots there are per page and set positions
         # and margins accordingly
         if len(images) == 8:
-            self.image(images[0], h=self.HEIGHT/4, w=self.WIDTH/2)
-            self.image(images[1], h=self.HEIGHT/4, w=self.WIDTH/2, x=self.WIDTH/2)
-            self.image(images[2], h=self.HEIGHT/4, w=self.WIDTH/2, y=self.HEIGHT/4)
+            self.image(images[0], h=self.HEIGHT/5, w=self.WIDTH/2, x=0, y=self.HEIGHT/10)
+            self.image(images[1], h=self.HEIGHT/5, w=self.WIDTH/2, x=self.WIDTH/2, y=self.HEIGHT/10)
+            self.image(images[2], h=self.HEIGHT/5, w=self.WIDTH/2, x=0, y=self.HEIGHT/10+self.HEIGHT/5)
+            self.image(images[3], h=self.HEIGHT/5, w=self.WIDTH/2, x=self.WIDTH/2, y=self.HEIGHT/10+self.HEIGHT/5)
+            self.image(images[4], h=self.HEIGHT/5, w=self.WIDTH/2, x=0, y=self.HEIGHT/10+2*self.HEIGHT/5)
+            self.image(images[5], h=self.HEIGHT/5, w=self.WIDTH/2, x=self.WIDTH/2, y=self.HEIGHT/10+2*self.HEIGHT/5)
+            self.image(images[6], h=self.HEIGHT/5, w=self.WIDTH/2, x=0, y=self.HEIGHT/10+3*self.HEIGHT/5)
+            self.image(images[7], h=self.HEIGHT/5, w=self.WIDTH/2, x=self.WIDTH/2, y=self.HEIGHT/10+3*self.HEIGHT/5)
         elif len(images) == 4:
-            self.image(images[0], 15, 25, self.WIDTH - 30)
-            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+            self.image(images[0], h=self.HEIGHT/5, w=self.WIDTH/2)
+            self.image(images[1], h=self.HEIGHT/5, w=self.WIDTH/2)
+            self.image(images[2], h=self.HEIGHT/5, w=self.WIDTH/2)
+            self.image(images[3], h=self.HEIGHT/4, w=self.WIDTH*0.8)
         else:
             self.image(images[0], 15, 25, self.WIDTH - 30)
             

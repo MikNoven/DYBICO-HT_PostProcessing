@@ -529,7 +529,7 @@ for subj in list_of_subjs:
         handplot_df.set_axis(['TrainingDay', 'MaxForce_L', 'MaxForce_R'], axis=1, inplace=True)
         ax = handplot_df.plot(x='TrainingDay', kind='bar', stacked=False, grid=True, legend=True, fontsize=14, colormap='tab10')
         ax.set_xlabel('TrainingDay',fontsize=16, fontweight='bold')
-        ax.set_ylabel('Max Force / kg',fontsize=16, fontweight='bold')
+        ax.set_ylabel('Max Force / g',fontsize=16, fontweight='bold')
         ax.grid(axis='x')
         ax.set_title('Max Force for each Training Day', fontsize=16, fontweight='bold')
         ax.figure.savefig(os.path.join(report_dir,subj,'MaxForces.png'), bbox_inches="tight")
