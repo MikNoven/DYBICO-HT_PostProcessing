@@ -829,7 +829,7 @@ def get_survey_answers(HT_dir):
         while not stop:
             if line[t_itr]=='\n':
                 return '0'
-            elif line[t_itr]==' ':
+            elif line[t_itr]==' ' or line[t_itr]=='\\':
                 stop = True
             elif line[t_itr]==',':
                 tim=tim+'.'
@@ -842,26 +842,27 @@ def get_survey_answers(HT_dir):
         return tim
                 
                 
-    with open(os.path.join(HT_dir,'SurveyAnswers.txt')) as f:
+    with open(os.path.join(HT_dir,'SurveyAnswers.txt'), 'rb') as f:
         lines = f.readlines()
         
-    sleep_time = time_answer_reader(lines[0])      
-    sleep_quality = time_answer_reader(lines[1])    
-    bwalk = time_answer_reader(lines[2])
-    cardio = time_answer_reader(lines[3])
-    swim = time_answer_reader(lines[4])
-    wtrain = time_answer_reader(lines[5])
-
+    sleep_time = time_answer_reader(str(lines[0]))      
+    sleep_quality = time_answer_reader(str(lines[1]))    
+    bwalk = time_answer_reader(str(lines[2]))
+    cardio = time_answer_reader(str(lines[3]))
+    swim = time_answer_reader(str(lines[4]))
+    wtrain = time_answer_reader(str(lines[5]))
+    ot='0'
     what_ot=''
-    if not lines[6][-1] == ' ':
-        ot = time_answer_reader(lines[6])
+    ot_line=str(lines[6])
+    if not ot_line[-1] == ' ':
+        ot = time_answer_reader(ot_line)
         stop = False
         str_itr=8
         while not stop:
-            if lines[6][str_itr]==' ':
+            if ot_line[str_itr]==' ':
                 stop = True
             else:
-                what_ot=what_ot+lines[6][str_itr]
+                what_ot=what_ot+ot_line[str_itr]
                 str_itr=str_itr+1
     
     return sleep_time, sleep_quality, bwalk, cardio, swim, wtrain, ot, what_ot

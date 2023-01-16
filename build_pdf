@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Jan 16 11:44:36 2023
+Script for actually generating the pdf report.
+@author: gdf724
+"""
+import os
+from fpdf import FPDF, HTMLMixin
+from datetime import datetime
+import glob
+
+class PDF(FPDF):
+    def __init__(self):
+        super().__init__()
+        self.WIDTH = 210
+        self.HEIGHT = 297
+        
+    def header(self):
+        # Custom logo and positioning
+        # Create an `assets` folder and put any wide and short image inside
+        # Name the image `logo.png`
+        self.set_font('Arial', 'B', 11)
+        self.cell(self.WIDTH - 80)
+        self.cell(60, 1, 'Training Report', 0, 0, 'R')
+        self.ln(20)
+        
+    def footer(self):
+        # Page numbers in the footer
+        self.set_y(-15)
+        self.set_font('Arial', 'I', 8)
+        self.set_text_color(128)
+        self.cell(0, 10, 'Page ' + str(self.page_no()), 0, 0, 'C')
+
+    def page_body(self, images):
+        # Determine how many plots there are per page and set positions
+        # and margins accordingly
+        if len(images) == 8:
+            self.image(images[0], h=self.HEIGHT/4, w=self.WIDTH/2)
+            self.image(images[1], h=self.HEIGHT/4, w=self.WIDTH/2, x=self.WIDTH/2)
+            self.image(images[2], h=self.HEIGHT/4, w=self.WIDTH/2, y=self.HEIGHT/4)
+        elif len(images) == 4:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            self.image(images[1], 15, self.WIDTH / 2 + 5, self.WIDTH - 30)
+        else:
+            self.image(images[0], 15, 25, self.WIDTH - 30)
+            
+    def print_page(self, images):
+        # Generates the report
+        self.add_page()
+        self.page_body(images)
+
+
+#Whole training period 
+report_dir='/Users/gdf724/Data/ReScale/HomeTrainingTest/Reports'
+subj=os.listdir(report_dir)
+for line in subj:
+    if line[0]=='.':
+        subj.remove(line)
+    elif line[-2:]=='df':
+        subj.remove(line)
+
+for subject in subj:
+    report=PDF()
+    subj_dir = os.path.join(report_dir,subject)
+    tot_plots_per_page_1 = ['Tot_ToT_A.png', 'Tot_ToT_S.png', 'Tot_Err_A.png', 'Tot_Err_S.png', 'Tot_Succ_A.png', 'Tot_Succ_S.png', 'Tot_Handsep_A.png', 'Tot_Handsep_S.png']
+    tot_plots_per_page_1 = [os.path.join(subj_dir,x) for x in tot_plots_per_page_1]
+    report.print_page(tot_plots_per_page_1)
+    tot_plots_per_page_2 = ['MaxForces.png', 'TimeOfDay.png', 'Sleep.png', 'PA_table.png']
+    tot_plots_per_page_2 = [os.path.join(subj_dir,x) for x in tot_plots_per_page_2]
+    report.print_page(tot_plots_per_page_2)
+        
+    report.output(subject+'_training.pdf', 'F')
+    os.rename(subject+'_training.pdf', os.path.join(subj_dir,subject+'_training.pdf'))
+        
+        
+        
