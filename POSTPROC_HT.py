@@ -16,15 +16,34 @@ import glob
 import postproc_helper_HT as pph 
 import matplotlib.pyplot as plt
 
+##############Helper functions###################
+
+def calc_gamelevel(duration):
+    if duration > 1.9 and duration < 2.1:
+        gLvl = 1
+    elif duration > 1.7 and duration < 1.9:
+        gLvl = 2
+    elif duration > 1.5 and duration < 1.7:
+        gLvl = 3
+    elif duration > 1.3 and duration < 1.5:
+        gLvl = 4
+    elif duration > 1.1 and duration < 1.3:
+        gLvl = 5
+        
+    return gLvl
+
+
 ##############Set paths and plot options###################
 #Change to where you have your data.
 path='/Users/gdf724/Data/ReScale/HomeTrainingTest/' 
 #List all subjects to process.
-list_of_subjs=['P001', 'P002', 'P003']
+#list_of_subjs=['P001', 'P002', 'P003']
+list_of_subjs=['P003','P004']
 #Do you want to make trial GIFs for each run and condition? 
-createGIFS = True 
+createGIFS = False 
 #Do you want to make average trajectory plots for each run and condition?
-doRunPlots = True
+doRunPlots = False
+overwrite = True
 
 ##############Postprocessing################################
 #Loop over subjects.
@@ -34,7 +53,7 @@ for i in range(len(list_of_subjs)):
     
     for day in range(len(HT_days)):
             sess = HT_days[day]
-            if not os.path.exists(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_1.pkl')):
+            if not os.path.exists(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_1.pkl')) or overwrite:
     
                 #Fix the data to the proper structure and in a PostProcessing-folder
                 pph.make_PP_folder(sess)
@@ -61,6 +80,7 @@ for i in range(len(list_of_subjs)):
                     trial_condition = []
                     condgroup = []
                     block = []
+                    gameLvls = []
                     
                     S_block = 1
                     A_block = 1
@@ -74,6 +94,7 @@ for i in range(len(list_of_subjs)):
                         if data['targetTrial'][itr] != 'Baseline':
                             trial_condition.append(data['targetTrial'][itr])
                             condgroup.append(data['targetTrial'][itr][0])
+                            
                             if data['targetTrial'][itr][0] == 'S':
                                 block.append(S_block)
                             elif data['targetTrial'][itr][0] == 'A':
@@ -81,6 +102,9 @@ for i in range(len(list_of_subjs)):
                             tmp_t = [(data['time'][itr][j]-data['time'][itr][0]) for j in range(len(data['time'][itr]))]
                             tmp_target_L = [data['targets'][itr][k][0] for k in range(len(tmp_t))]
                             tmp_target_R = [data['targets'][itr][k][1] for k in range(len(tmp_t))]
+                            
+                            tmp_dur = data['duration']
+                            gameLvls.append(calc_gamelevel(tmp_dur[0]))
                             
                             (tmp_trial_React_L, tmp_trial_React_R, tmp_trial_ACCtw_L, tmp_trial_ACCtw_R, tmp_trial_ACCimpact_L, \
                              tmp_trial_ACCimpact_R, tmp_trial_impacttime_L, tmp_trial_impacttime_R, tmp_trial_impact_L, tmp_trial_impact_R, \
@@ -137,6 +161,7 @@ for i in range(len(list_of_subjs)):
                     trial_behaviour['condition'] = trial_condition
                     trial_behaviour['symmetry'] = condgroup
                     trial_behaviour['block'] = block
+                    trial_behaviour['gamelevel'] = gameLvls
                     trial_behaviour['ReactTime_L'] = trial_React_L
                     trial_behaviour['ReactTime_R'] = trial_React_R
                     trial_behaviour['ACCtw_L'] = trial_ACCtw_L
@@ -155,7 +180,7 @@ for i in range(len(list_of_subjs)):
                     trial_behaviour['trial_success_time_both'] = trial_success_time_both
                     trial_behaviour.to_pickle(os.path.join(path,subj,sess,'PostProcessing','Trial_Behaviour_Sess_'+str(k+1)+'.pkl'))
                     
-                    
+                    print(str(calc_gamelevel(tmp_t[-1])))
                     ##############Averages and plots################################# 
                     #Make save structure. One per run and subject.
                     behaviour = pd.DataFrame()
@@ -203,6 +228,7 @@ for i in range(len(list_of_subjs)):
                         save_pkl['time_on_target_L'] = tmp_time_on_target_L
                         save_pkl['time_on_target_R'] = tmp_time_on_target_R   
                         save_pkl['forcediff'] = tmp_force_diff 
+                        
             
                         #Append to behaviour dataframe
                         behaviour = behaviour.append(save_pkl, ignore_index=True)                    

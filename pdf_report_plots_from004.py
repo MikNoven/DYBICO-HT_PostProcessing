@@ -235,7 +235,7 @@ def tot_plot(print_data_means_L, print_data_std_L, print_data_means_R, print_dat
 #Change to where you have your data.
 path='/Users/gdf724/Data/ReScale/HomeTrainingTest/' 
 #List all subjects to process.
-list_of_subjs=['P003']
+list_of_subjs=['P004']
 report_dir='/Users/gdf724/Data/ReScale/HomeTrainingTest/Reports'
 
 overwrite = True
@@ -253,39 +253,71 @@ for subj in list_of_subjs:
     pa_rows = ['Training day %d' % x for x in range(1,len(HT_days)+1)]
     pa_columns = ('Brisk walk', 'Cardio', 'Swimming', 'Weight training', 'Other')
     
-    ToT_asym_L = [None]*len(HT_days) #One value per day
-    ToT_asym_R = [None]*len(HT_days)
-    ToT_sym_L = [None]*len(HT_days)
-    ToT_sym_R = [None]*len(HT_days)
-    err_asym_L = [None]*len(HT_days)
-    err_asym_R = [None]*len(HT_days)
-    err_sym_L = [None]*len(HT_days)
-    err_sym_R = [None]*len(HT_days)
-    trialSuccess_asym_L = [None]*len(HT_days)
-    trialSuccess_asym_R = [None]*len(HT_days)
-    trialSuccess_sym_L = [None]*len(HT_days)
-    trialSuccess_sym_R = [None]*len(HT_days)
-    trialSuccess_asym_both = [None]*len(HT_days)
-    trialSuccess_sym_both = [None]*len(HT_days)
-    handsep_asym = [None]*len(HT_days) 
-    handsep_sym = [None]*len(HT_days)
-    ToT_asym_L_std = [None]*len(HT_days) #One value per day
-    ToT_asym_R_std = [None]*len(HT_days)
-    ToT_sym_L_std = [None]*len(HT_days)
-    ToT_sym_R_std = [None]*len(HT_days)
-    err_asym_L_std = [None]*len(HT_days)
-    err_asym_R_std = [None]*len(HT_days)
-    err_sym_L_std = [None]*len(HT_days)
-    err_sym_R_std = [None]*len(HT_days)
-    trialSuccess_asym_L_std = [None]*len(HT_days)
-    trialSuccess_asym_R_std = [None]*len(HT_days)
-    trialSuccess_sym_L_std = [None]*len(HT_days)
-    trialSuccess_sym_R_std = [None]*len(HT_days)
-    trialSuccess_asym_both_std = [None]*len(HT_days)
-    trialSuccess_sym_both_std = [None]*len(HT_days)
-    handsep_asym_std = [None]*len(HT_days)
-    handsep_sym_std = [None]*len(HT_days)
+    ToT_asym_L_12 = [None]*len(HT_days) #One value per day
+    ToT_asym_R_12 = [None]*len(HT_days)
+    ToT_sym_L_12 = [None]*len(HT_days)
+    ToT_sym_R_12 = [None]*len(HT_days)
+    err_asym_L_12 = [None]*len(HT_days)
+    err_asym_R_12 = [None]*len(HT_days)
+    err_sym_L_12 = [None]*len(HT_days)
+    err_sym_R_12 = [None]*len(HT_days)
+    trialSuccess_asym_L_12 = [None]*len(HT_days)
+    trialSuccess_asym_R_12 = [None]*len(HT_days)
+    trialSuccess_sym_L_12 = [None]*len(HT_days)
+    trialSuccess_sym_R_12 = [None]*len(HT_days)
+    trialSuccess_asym_both_12 = [None]*len(HT_days)
+    trialSuccess_sym_both_12 = [None]*len(HT_days)
+    handsep_asym_12 = [None]*len(HT_days) 
+    handsep_sym_12 = [None]*len(HT_days)
+    ToT_asym_L_12_std = [None]*len(HT_days) #One value per day
+    ToT_asym_R_12_std = [None]*len(HT_days)
+    ToT_sym_L_12_std = [None]*len(HT_days)
+    ToT_sym_R_12_std = [None]*len(HT_days)
+    err_asym_L_12_std = [None]*len(HT_days)
+    err_asym_R_12_std = [None]*len(HT_days)
+    err_sym_L_12_std = [None]*len(HT_days)
+    err_sym_R_12_std = [None]*len(HT_days)
+    trialSuccess_asym_L_12_std = [None]*len(HT_days)
+    trialSuccess_asym_R_12_std = [None]*len(HT_days)
+    trialSuccess_sym_L_12_std = [None]*len(HT_days)
+    trialSuccess_sym_R_12_std = [None]*len(HT_days)
+    trialSuccess_asym_both_12_std = [None]*len(HT_days)
+    trialSuccess_sym_both_12_std = [None]*len(HT_days)
+    handsep_asym_12_std = [None]*len(HT_days)
+    handsep_sym_12_std = [None]*len(HT_days)
     
+    ToT_asym_L_3 = [None]*len(HT_days) #One value per day
+    ToT_asym_R_3 = [None]*len(HT_days)
+    ToT_sym_L_3 = [None]*len(HT_days)
+    ToT_sym_R_3 = [None]*len(HT_days)
+    err_asym_L_3 = [None]*len(HT_days)
+    err_asym_R_3 = [None]*len(HT_days)
+    err_sym_L_3 = [None]*len(HT_days)
+    err_sym_R_3 = [None]*len(HT_days)
+    trialSuccess_asym_L_3 = [None]*len(HT_days)
+    trialSuccess_asym_R_3 = [None]*len(HT_days)
+    trialSuccess_sym_L_3 = [None]*len(HT_days)
+    trialSuccess_sym_R_3 = [None]*len(HT_days)
+    trialSuccess_asym_both_3 = [None]*len(HT_days)
+    trialSuccess_sym_both_3 = [None]*len(HT_days)
+    handsep_asym_3 = [None]*len(HT_days) 
+    handsep_sym_3 = [None]*len(HT_days)
+    ToT_asym_L_3_std = [None]*len(HT_days) #One value per day
+    ToT_asym_R_3_std = [None]*len(HT_days)
+    ToT_sym_L_3_std = [None]*len(HT_days)
+    ToT_sym_R_3_std = [None]*len(HT_days)
+    err_asym_L_3_std = [None]*len(HT_days)
+    err_asym_R_3_std = [None]*len(HT_days)
+    err_sym_L_3_std = [None]*len(HT_days)
+    err_sym_R_3_std = [None]*len(HT_days)
+    trialSuccess_asym_L_3_std = [None]*len(HT_days)
+    trialSuccess_asym_R_3_std = [None]*len(HT_days)
+    trialSuccess_sym_L_3_std = [None]*len(HT_days)
+    trialSuccess_sym_R_3_std = [None]*len(HT_days)
+    trialSuccess_asym_both_3_std = [None]*len(HT_days)
+    trialSuccess_sym_both_3_std = [None]*len(HT_days)
+    handsep_asym_3_std = [None]*len(HT_days)
+    handsep_sym_3_std = [None]*len(HT_days)
     
     
     #Make subject dir
@@ -352,6 +384,7 @@ for subj in list_of_subjs:
                 game_levels.append(tmp_gmlvl[0])
             
             (A_blocks, S_blocks) = get_block_data(sess_trial_data)
+            
             #Make the session-specific plots and save them in reports folder.
             block_ToT_asym_L = [[] for x in range(len(A_blocks))] 
             block_ToT_asym_R = [[] for x in range(len(A_blocks))]
@@ -473,6 +506,39 @@ for subj in list_of_subjs:
             sess_std_handsep_asym[sess_itr] = np.std(np.asarray(block_handsep_asym))
             sess_handsep_sym[sess_itr] = np.mean(np.asarray(block_handsep_sym))
             sess_std_handsep_sym[sess_itr] = np.std(np.asarray(block_handsep_sym))
+            if sess_itr==2:
+                ToT_asym_L_3[day_itr] = np.mean(np.asarray(block_ToT_asym_L)) #One value per day
+                ToT_asym_R_3[day_itr] = np.mean(np.asarray(block_ToT_asym_R))
+                ToT_sym_L_3[day_itr] = np.mean(np.asarray(block_ToT_sym_L))
+                ToT_sym_R_3[day_itr] = np.mean(np.asarray(block_ToT_sym_R))
+                err_asym_L_3[day_itr] = np.mean(np.asarray(block_err_asym_L))
+                err_asym_R_3[day_itr] = np.mean(np.asarray(block_err_asym_R))
+                err_sym_L_3[day_itr] = np.mean(np.asarray(block_err_sym_L))
+                err_sym_R_3[day_itr] = np.mean(np.asarray(block_err_sym_R))
+                trialSuccess_asym_L_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_asym_L[0])/len(block_trialSuccess_asym_L[0]), 100*sum(block_trialSuccess_asym_L[1])/len(block_trialSuccess_asym_L[1]), 100*sum(block_trialSuccess_asym_L[2])/len(block_trialSuccess_asym_L[2])]))
+                trialSuccess_asym_R_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_asym_R[0])/len(block_trialSuccess_asym_R[0]), 100*sum(block_trialSuccess_asym_R[1])/len(block_trialSuccess_asym_R[1]), 100*sum(block_trialSuccess_asym_R[2])/len(block_trialSuccess_asym_R[2])]))
+                trialSuccess_sym_L_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_sym_L[0])/len(block_trialSuccess_sym_L[0]), 100*sum(block_trialSuccess_sym_L[1])/len(block_trialSuccess_sym_L[1]), 100*sum(block_trialSuccess_sym_L[2])/len(block_trialSuccess_sym_L[2])]))
+                trialSuccess_sym_R_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_sym_R[0])/len(block_trialSuccess_sym_R[0]), 100*sum(block_trialSuccess_sym_R[1])/len(block_trialSuccess_sym_R[1]), 100*sum(block_trialSuccess_sym_R[2])/len(block_trialSuccess_sym_R[2])]))
+                trialSuccess_asym_both_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_asym_both[0])/len(block_trialSuccess_asym_both[0]), 100*sum(block_trialSuccess_asym_both[1])/len(block_trialSuccess_asym_both[1]), 100*sum(block_trialSuccess_asym_both[2])/len(block_trialSuccess_asym_both[2])]))
+                trialSuccess_sym_both_3[day_itr] = np.mean(np.asarray([100*sum(block_trialSuccess_sym_both[0])/len(block_trialSuccess_sym_both[0]), 100*sum(block_trialSuccess_sym_both[1])/len(block_trialSuccess_sym_both[1]), 100*sum(block_trialSuccess_sym_both[2])/len(block_trialSuccess_sym_both[2])]))
+                handsep_asym_3[day_itr] = np.mean(np.asarray(block_handsep_asym))
+                handsep_sym_3[day_itr] = np.mean(np.asarray(block_handsep_sym))
+                ToT_asym_L_3_std[day_itr] = np.std(np.asarray(block_ToT_asym_L)) #One value per day
+                ToT_asym_R_3_std[day_itr] = np.std(np.asarray(block_ToT_asym_R))
+                ToT_sym_L_3_std[day_itr] = np.std(np.asarray(block_ToT_sym_L))
+                ToT_sym_R_3_std[day_itr] = np.std(np.asarray(block_ToT_sym_R))
+                err_asym_L_3_std[day_itr] = np.std(np.asarray(block_err_asym_L))
+                err_asym_R_3_std[day_itr] = np.std(np.asarray(block_err_asym_R))
+                err_sym_L_3_std[day_itr] = np.std(np.asarray(block_err_sym_L))
+                err_sym_R_3_std[day_itr] = np.std(np.asarray(block_err_sym_R))
+                trialSuccess_asym_L_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_asym_L[0])/len(block_trialSuccess_asym_L[0]), 100*sum(block_trialSuccess_asym_L[1])/len(block_trialSuccess_asym_L[1]), 100*sum(block_trialSuccess_asym_L[2])/len(block_trialSuccess_asym_L[2])]))
+                trialSuccess_asym_R_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_asym_R[0])/len(block_trialSuccess_asym_R[0]), 100*sum(block_trialSuccess_asym_R[1])/len(block_trialSuccess_asym_R[1]), 100*sum(block_trialSuccess_asym_R[2])/len(block_trialSuccess_asym_R[2])]))
+                trialSuccess_sym_L_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_sym_L[0])/len(block_trialSuccess_sym_L[0]), 100*sum(block_trialSuccess_sym_L[1])/len(block_trialSuccess_sym_L[1]), 100*sum(block_trialSuccess_sym_L[2])/len(block_trialSuccess_sym_L[2])]))
+                trialSuccess_sym_R_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_sym_R[0])/len(block_trialSuccess_sym_R[0]), 100*sum(block_trialSuccess_sym_R[1])/len(block_trialSuccess_sym_R[1]), 100*sum(block_trialSuccess_sym_R[2])/len(block_trialSuccess_sym_R[2])]))
+                trialSuccess_asym_both_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_asym_both[0])/len(block_trialSuccess_asym_both[0]), 100*sum(block_trialSuccess_asym_both[1])/len(block_trialSuccess_asym_both[1]), 100*sum(block_trialSuccess_asym_both[2])/len(block_trialSuccess_asym_both[2])]))
+                trialSuccess_sym_both_3_std[day_itr] = np.std(np.asarray([100*sum(block_trialSuccess_sym_both[0])/len(block_trialSuccess_sym_both[0]), 100*sum(block_trialSuccess_sym_both[1])/len(block_trialSuccess_sym_both[1]), 100*sum(block_trialSuccess_sym_both[2])/len(block_trialSuccess_sym_both[2])]))
+                handsep_asym_3_std[day_itr] = np.std(np.asarray(block_handsep_asym))
+                handsep_sym_3_std[day_itr] = np.std(np.asarray(block_handsep_sym))
             #Make the day-specific plots and report and use the session values.
             ##ToT
         if not os.path.exists(os.path.join(day_save_folder,'Day_Succ_A.png')) or overwrite:
@@ -490,41 +556,42 @@ for subj in list_of_subjs:
             ##handsep
             day_handsep_plot([x for x in sess_handsep_asym], [x for x in sess_std_handsep_asym], 'Force difference', 'Absolute force difference between hands\nAsymmetric condition Level '+str(game_levels[-1]), os.path.join(day_save_folder,'Day_HandSep_A.png'))
             day_handsep_plot([x for x in sess_handsep_sym], [x for x in sess_std_handsep_sym], 'Force difference', 'Absolute force difference between hands\nSymmetric condition Level '+str(game_levels[-1]), os.path.join(day_save_folder,'Day_HandSep_S.png'))
-    
+            
         #Save daily measurement + std
         #Standard deviation between blocks. If interested in standard deviation within blocks, one needs to look at the daily plots. 
-        ToT_asym_L[day_itr] = np.mean(np.asarray(sess_ToT_asym_L)) #One value per day
-        ToT_asym_R[day_itr] = np.mean(np.asarray(sess_ToT_asym_R))
-        ToT_sym_L[day_itr] = np.mean(np.asarray(sess_ToT_sym_L))
-        ToT_sym_R[day_itr] = np.mean(np.asarray(sess_ToT_sym_R))
-        err_asym_L[day_itr] = np.mean(np.asarray(sess_err_asym_L))
-        err_asym_R[day_itr] = np.mean(np.asarray(sess_err_asym_R))
-        err_sym_L[day_itr] = np.mean(np.asarray(sess_err_sym_L))
-        err_sym_R[day_itr] = np.mean(np.asarray(sess_err_sym_R))
-        trialSuccess_asym_L[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_L))
-        trialSuccess_asym_R[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_R))
-        trialSuccess_sym_L[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_L))
-        trialSuccess_sym_R[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_R))
-        trialSuccess_asym_both[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_both))
-        trialSuccess_sym_both[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_both))
-        handsep_asym[day_itr] = np.mean(np.asarray(sess_handsep_asym))
-        handsep_sym[day_itr] = np.mean(np.asarray(sess_handsep_sym))
-        ToT_asym_L_std[day_itr] = np.std(np.asarray(sess_ToT_asym_L)) #One value per day
-        ToT_asym_R_std[day_itr] = np.std(np.asarray(sess_ToT_asym_R))
-        ToT_sym_L_std[day_itr] = np.std(np.asarray(sess_ToT_sym_L))
-        ToT_sym_R_std[day_itr] = np.std(np.asarray(sess_ToT_sym_R))
-        err_asym_L_std[day_itr] = np.std(np.asarray(sess_err_asym_L))
-        err_asym_R_std[day_itr] = np.std(np.asarray(sess_err_asym_R))
-        err_sym_L_std[day_itr] = np.std(np.asarray(sess_err_sym_L))
-        err_sym_R_std[day_itr] = np.std(np.asarray(sess_err_sym_R))
-        trialSuccess_asym_L_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_L))
-        trialSuccess_asym_R_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_R))
-        trialSuccess_sym_L_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_L))
-        trialSuccess_sym_R_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_R))
-        trialSuccess_asym_both_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_both))
-        trialSuccess_sym_both_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_both))
-        handsep_asym_std[day_itr] = np.std(np.asarray(sess_handsep_asym))
-        handsep_sym_std[day_itr] = np.std(np.asarray(sess_handsep_sym))
+         
+        ToT_asym_L_12[day_itr] = np.mean(np.asarray(sess_ToT_asym_L[0:2])) #One value per day
+        ToT_asym_R_12[day_itr] = np.mean(np.asarray(sess_ToT_asym_R[0:2]))
+        ToT_sym_L_12[day_itr] = np.mean(np.asarray(sess_ToT_sym_L[0:2]))
+        ToT_sym_R_12[day_itr] = np.mean(np.asarray(sess_ToT_sym_R[0:2]))
+        err_asym_L_12[day_itr] = np.mean(np.asarray(sess_err_asym_L[0:2]))
+        err_asym_R_12[day_itr] = np.mean(np.asarray(sess_err_asym_R[0:2]))
+        err_sym_L_12[day_itr] = np.mean(np.asarray(sess_err_sym_L[0:2]))
+        err_sym_R_12[day_itr] = np.mean(np.asarray(sess_err_sym_R[0:2]))
+        trialSuccess_asym_L_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_L[0:2]))
+        trialSuccess_asym_R_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_R[0:2]))
+        trialSuccess_sym_L_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_L[0:2]))
+        trialSuccess_sym_R_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_R[0:2]))
+        trialSuccess_asym_both_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_asym_both[0:2]))
+        trialSuccess_sym_both_12[day_itr] = np.mean(np.asarray(sess_trialSuccess_sym_both[0:2]))
+        handsep_asym_12[day_itr] = np.mean(np.asarray(sess_handsep_asym[0:2]))
+        handsep_sym_12[day_itr] = np.mean(np.asarray(sess_handsep_sym[0:2]))
+        ToT_asym_L_12_std[day_itr] = np.std(np.asarray(sess_ToT_asym_L[0:2])) #One value per day
+        ToT_asym_R_12_std[day_itr] = np.std(np.asarray(sess_ToT_asym_R[0:2]))
+        ToT_sym_L_12_std[day_itr] = np.std(np.asarray(sess_ToT_sym_L[0:2]))
+        ToT_sym_R_12_std[day_itr] = np.std(np.asarray(sess_ToT_sym_R[0:2]))
+        err_asym_L_12_std[day_itr] = np.std(np.asarray(sess_err_asym_L[0:2]))
+        err_asym_R_12_std[day_itr] = np.std(np.asarray(sess_err_asym_R[0:2]))
+        err_sym_L_12_std[day_itr] = np.std(np.asarray(sess_err_sym_L[0:2]))
+        err_sym_R_12_std[day_itr] = np.std(np.asarray(sess_err_sym_R[0:2]))
+        trialSuccess_asym_L_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_L[0:2]))
+        trialSuccess_asym_R_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_R[0:2]))
+        trialSuccess_sym_L_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_L[0:2]))
+        trialSuccess_sym_R_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_R[0:2]))
+        trialSuccess_asym_both_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_asym_both[0:2]))
+        trialSuccess_sym_both_12_std[day_itr] = np.std(np.asarray(sess_trialSuccess_sym_both[0:2]))
+        handsep_asym_12_std[day_itr] = np.std(np.asarray(sess_handsep_asym[0:2]))
+        handsep_sym_12_std[day_itr] = np.std(np.asarray(sess_handsep_sym[0:2]))
 
         
     ##############Make weekly plots###################
@@ -539,21 +606,40 @@ for subj in list_of_subjs:
     #Time of day 
     #Sleep + sleep quality
     #PA table
+    #Sessions 1 and 2
     ##Tot
-    tot_plot([100*x for x in ToT_asym_L], [100*x for x in ToT_asym_L_std], [100*x for x in ToT_asym_R], [100*x for x in ToT_asym_R_std], 'Time on target /\n% of trial time', 'Time on Target for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_ToT_A.png'), game_levels)
-    tot_plot([100*x for x in ToT_sym_L], [100*x for x in ToT_sym_L_std], [100*x for x in ToT_sym_R], [100*x for x in ToT_sym_R_std], 'Time on target /\n% of trial time', 'Time on Target for Symmetric conditions', os.path.join(report_dir,subj,'Tot_ToT_S.png'), game_levels)
+    tot_plot([100*x for x in ToT_asym_L_12], [100*x for x in ToT_asym_L_12_std], [100*x for x in ToT_asym_R_12], [100*x for x in ToT_asym_R_12_std], 'Time on target /\n% of trial time', 'Time on Target for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_12_ToT_A.png'), game_levels)
+    tot_plot([100*x for x in ToT_sym_L_12], [100*x for x in ToT_sym_L_12_std], [100*x for x in ToT_sym_R_12], [100*x for x in ToT_sym_R_12_std], 'Time on target /\n% of trial time', 'Time on Target for Symmetric conditions', os.path.join(report_dir,subj,'Tot_12_ToT_S.png'), game_levels)
     
     ##Err
-    tot_plot([x for x in err_asym_L], [x for x in err_asym_L_std], [x for x in err_asym_R], [x for x in err_asym_R_std], 'Error', 'Error last 500 ms for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_Err_A.png'), game_levels)
-    tot_plot([x for x in err_sym_L], [x for x in err_sym_L_std], [x for x in err_sym_R], [x for x in err_sym_R_std], 'Error', 'Error last 500 ms for Symmetric conditions', os.path.join(report_dir,subj,'Tot_Err_S.png'), game_levels)
+    tot_plot([x for x in err_asym_L_12], [x for x in err_asym_L_12_std], [x for x in err_asym_R_12], [x for x in err_asym_R_12_std], 'Error', 'Error last 500 ms for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_12_Err_A.png'), game_levels)
+    tot_plot([x for x in err_sym_L_12], [x for x in err_sym_L_12_std], [x for x in err_sym_R_12], [x for x in err_sym_R_12_std], 'Error', 'Error last 500 ms for Symmetric conditions', os.path.join(report_dir,subj,'Tot_12_Err_S.png'), game_levels)
     
     ##Trial Successes, maybe only both relevant
-    tot_succ_plot([x for x in trialSuccess_asym_both], [x for x in trialSuccess_asym_both_std], [x for x in trialSuccess_asym_L], [x for x in trialSuccess_asym_L_std], [x for x in trialSuccess_asym_R], [x for x in trialSuccess_asym_R_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Asymmetric conditions', os.path.join(report_dir,subj,'Tot_Succ_A.png'), game_levels)
-    tot_succ_plot([x for x in trialSuccess_sym_both], [x for x in trialSuccess_sym_both_std], [x for x in trialSuccess_sym_L], [x for x in trialSuccess_sym_L_std], [x for x in trialSuccess_sym_R], [x for x in trialSuccess_sym_R_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Symmetric conditions', os.path.join(report_dir,subj,'Tot_Succ_S.png'), game_levels)
+    tot_succ_plot([x for x in trialSuccess_asym_both_12], [x for x in trialSuccess_asym_both_12_std], [x for x in trialSuccess_asym_L_12], [x for x in trialSuccess_asym_L_12_std], [x for x in trialSuccess_asym_R_12], [x for x in trialSuccess_asym_R_12_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Asymmetric conditions', os.path.join(report_dir,subj,'Tot_12_Succ_A.png'), game_levels)
+    tot_succ_plot([x for x in trialSuccess_sym_both_12], [x for x in trialSuccess_sym_both_12_std], [x for x in trialSuccess_sym_L_12], [x for x in trialSuccess_sym_L_12_std], [x for x in trialSuccess_sym_R_12], [x for x in trialSuccess_sym_R_12_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Symmetric conditions', os.path.join(report_dir,subj,'Tot_12_Succ_S.png'), game_levels)
     
     ##handsep
-    tot_handsep_plot([x for x in handsep_asym], [x for x in handsep_asym_std], 'Force difference', 'Absolute force difference between hands\nAsymmetric condition', os.path.join(report_dir,subj,'Tot_HandSep_A.png'), game_levels)
-    tot_handsep_plot([x for x in handsep_sym], [x for x in handsep_sym_std], 'Force difference', 'Absolute force difference between hands\nSymmetric condition', os.path.join(report_dir,subj,'Tot_HandSep_S.png'), game_levels)
+    tot_handsep_plot([x for x in handsep_asym_12], [x for x in handsep_asym_12_std], 'Force difference', 'Absolute force difference between hands\nAsymmetric condition', os.path.join(report_dir,subj,'Tot_12_HandSep_A.png'), game_levels)
+    tot_handsep_plot([x for x in handsep_sym_12], [x for x in handsep_sym_12_std], 'Force difference', 'Absolute force difference between hands\nSymmetric condition', os.path.join(report_dir,subj,'Tot_12_HandSep_S.png'), game_levels)
+    
+    #Session 3
+    ##Tot
+    tot_plot([100*x for x in ToT_asym_L_3], [100*x for x in ToT_asym_L_3_std], [100*x for x in ToT_asym_R_3], [100*x for x in ToT_asym_R_3_std], 'Time on target /\n% of trial time', 'Time on Target for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_3_ToT_A.png'), [1])
+    tot_plot([100*x for x in ToT_sym_L_3], [100*x for x in ToT_sym_L_3_std], [100*x for x in ToT_sym_R_3], [100*x for x in ToT_sym_R_3_std], 'Time on target /\n% of trial time', 'Time on Target for Symmetric conditions', os.path.join(report_dir,subj,'Tot_3_ToT_S.png'), [1])
+    
+    ##Err
+    tot_plot([x for x in err_asym_L_3], [x for x in err_asym_L_3_std], [x for x in err_asym_R_3], [x for x in err_asym_R_3_std], 'Error', 'Error last 500 ms for Asymmetric conditions', os.path.join(report_dir,subj,'Tot_3_Err_A.png'), [1])
+    tot_plot([x for x in err_sym_L_3], [x for x in err_sym_L_3_std], [x for x in err_sym_R_3], [x for x in err_sym_R_3_std], 'Error', 'Error last 500 ms for Symmetric conditions', os.path.join(report_dir,subj,'Tot_3_Err_S.png'), [1])
+    
+    ##Trial Successes, maybe only both relevant
+    tot_succ_plot([x for x in trialSuccess_asym_both_3], [x for x in trialSuccess_asym_both_3_std], [x for x in trialSuccess_asym_L_3], [x for x in trialSuccess_asym_L_3_std], [x for x in trialSuccess_asym_R_3], [x for x in trialSuccess_asym_R_3_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Asymmetric conditions', os.path.join(report_dir,subj,'Tot_3_Succ_A.png'), [1])
+    tot_succ_plot([x for x in trialSuccess_sym_both_3], [x for x in trialSuccess_sym_both_3_std], [x for x in trialSuccess_sym_L_3], [x for x in trialSuccess_sym_L_3_std], [x for x in trialSuccess_sym_R_3], [x for x in trialSuccess_sym_R_3_std], 'Successful trials / %', 'Successfully stable\n(<=0.5% max force for 300 ms)\nin Symmetric conditions', os.path.join(report_dir,subj,'Tot_3_Succ_S.png'), [1])
+    
+    ##handsep
+    tot_handsep_plot([x for x in handsep_asym_3], [x for x in handsep_asym_3_std], 'Force difference', 'Absolute force difference between hands\nAsymmetric condition', os.path.join(report_dir,subj,'Tot_3_HandSep_A.png'), [1])
+    tot_handsep_plot([x for x in handsep_sym_3], [x for x in handsep_sym_3_std], 'Force difference', 'Absolute force difference between hands\nSymmetric condition', os.path.join(report_dir,subj,'Tot_3_HandSep_S.png'), [1])
+    
     
     #Max force plots
     #Both hands in same plot
@@ -595,7 +681,7 @@ for subj in list_of_subjs:
     plt.close(ax.figure)
     #Make PA table
     plt.ioff()
-    PA_df = pd.DataFrame(data=physical_activity_matrix, columns=['TrainingDay', 'Walk/h', 'Cardio/h', 'Swimming/h', 'Weight Training/h', 'Other/h'])
+    PA_df = pd.DataFrame(data=physical_activity_matrix, columns=['TrainingDay', 'Walk/min', 'Cardio/min', 'Swimming/min', 'Weight Training/min', 'Other/min'])
     fig, ax = plt.subplots()
     ax.axis('off')
     ax.axis('tight')

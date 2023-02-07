@@ -575,6 +575,74 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
         time_on_target_L, time_on_target_R, force_diff
 
+#%%Get the success for 150 ms, 200 ms or 250 ms.
+def check_success_times(force_L, force_R, target_L, target_R, t):
+    
+    force_L = np.array(force_L)
+    force_R = np.array(force_R)
+    target_L = np.array(target_L)
+    target_R = np.array(target_R)
+    t = np.array(t)
+    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
+                        # and for time on target. 
+    
+    ##################Trial success#############################
+    stability_thresholds=[0.15, 0.2, 0.25, 0.3]
+    trial_success_time_L=[]
+    trial_success_time_R=[]
+    trial_success_time_both=[]
+    for stability_threshold in stability_thresholds:
+        L_success_indx_start = 0
+        R_success_indx_start = 0
+        both_success_indx_start = 0
+        #Right now it can occur more than once so start with three separate loops
+        #Both
+        t_tmp=0.0
+        for itr in range(len(force_L)):
+            tmp_diff_L = abs(force_L[itr]-target_L[itr])
+            tmp_diff_R = abs(force_R[itr]-target_R[itr])
+            if  tmp_diff_L <= closeness_thr and  tmp_diff_R <= closeness_thr:
+                if both_success_indx_start == 0:
+                    both_success_indx_start = itr
+            else:
+                both_success_indx_start = 0
+                
+            if both_success_indx_start!=0 and t[itr]-t[both_success_indx_start] >= stability_threshold:
+                t_tmp=t[itr]
+                break
+        trial_success_time_both.append(t_tmp)
+        
+        #Left
+        t_tmp=0.0
+        for itr in range(len(force_L)):
+            if  abs(force_L[itr]-target_L[itr]) <= closeness_thr: 
+                if L_success_indx_start == 0:
+                    L_success_indx_start = itr  
+            else:
+                L_success_indx_start = 0
+                
+            #For now 200 ms cutoff
+            if L_success_indx_start!=0 and t[itr]-t[L_success_indx_start] >= stability_threshold:
+                t_tmp=t[itr]
+                break
+        trial_success_time_L.append(t_tmp)
+                
+        #Right
+        t_tmp=0.0
+        for itr in range(len(force_R)):
+            if  abs(force_R[itr]-target_R[itr]) <= closeness_thr: 
+                if R_success_indx_start == 0:
+                    R_success_indx_start = itr  
+            else:
+                R_success_indx_start = 0
+                
+            if R_success_indx_start!=0 and t[itr]-t[R_success_indx_start] >= stability_threshold:
+                t_tmp=t[itr]
+                break
+        trial_success_time_R.append(t_tmp)
+                            
+    return stability_thresholds, trial_success_time_L, trial_success_time_R, trial_success_time_both
+
 #%%Get the behavioural parameters from HT data
 def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
     import numpy as np
@@ -845,7 +913,10 @@ def get_survey_answers(HT_dir):
     with open(os.path.join(HT_dir,'SurveyAnswers.txt'), 'rb') as f:
         lines = f.readlines()
         
-    sleep_time = time_answer_reader(str(lines[0]))      
+    sleep_time = float(time_answer_reader(str(lines[0])))
+    if sleep_time > 12:
+        sleep_time=sleep_time/10
+        sleep_time=str(sleep_time)
     sleep_quality = time_answer_reader(str(lines[1]))    
     bwalk = time_answer_reader(str(lines[2]))
     cardio = time_answer_reader(str(lines[3]))
