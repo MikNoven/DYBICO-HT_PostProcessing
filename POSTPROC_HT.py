@@ -38,12 +38,12 @@ def calc_gamelevel(duration):
 path='/Users/gdf724/Data/ReScale/HomeTrainingTest/' 
 #List all subjects to process.
 #list_of_subjs=['P001', 'P002', 'P003']
-list_of_subjs=['P003','P004']
+list_of_subjs=['P004']
 #Do you want to make trial GIFs for each run and condition? 
-createGIFS = False 
+createGIFS = True 
 #Do you want to make average trajectory plots for each run and condition?
-doRunPlots = False
-overwrite = True
+doRunPlots = True
+overwrite = False
 
 ##############Postprocessing################################
 #Loop over subjects.

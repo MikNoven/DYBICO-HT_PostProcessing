@@ -238,7 +238,7 @@ path='/Users/gdf724/Data/ReScale/HomeTrainingTest/'
 list_of_subjs=['P004']
 report_dir='/Users/gdf724/Data/ReScale/HomeTrainingTest/Reports'
 
-overwrite = True
+overwrite = False
 
 ##############Make daily reports and build averages###################
 for subj in list_of_subjs:
