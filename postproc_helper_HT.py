@@ -385,7 +385,6 @@ def reshape_data(filepath): # change output file structure
     #data.index = range(len(data)) 
 
     # we then use indices calculated previously, to sort arrays in trials
-    import numpy as np
     force_L, force_R, time, fliptime, target_names, targets = [], [], [],[], [],[]
     #test_unique = [] # only to ensure the code was correct 
     for j in range(len(trial_shifts)):
@@ -435,7 +434,6 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
             shutil.rmtree(plotdir)
         os.makedirs(plotdir)
     
-        #TODO: Set fixed axes.  
         for x in range(len(con_data)):
             plt.figure(x)
             plt.xlim([0,2])
@@ -473,7 +471,7 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
 #%%Get RT, ACC and trajectory diff measurements from trial or average-level data MN
 #Send in condition-specific data and calculated t from trial, run and subject.
 #Get values of RT and ACC as well as impacttime and impact-boolean from each trial.
-def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
+def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
     import numpy as np
     
     force_L = np.array(force_L)
@@ -482,12 +480,23 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
     target_R = np.array(target_R)
     t = np.array(t)
     
-    tw_ACC = 0.5 #The timewindow for calculating ACC.
-    tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
     closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
                         # and for time on target. 
-    ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
     der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
+    
+    if logtransform:
+        force_L = np.log(force_L)
+        force_R = np.log(force_R)
+        target_L = np.log(target_L)
+        target_R = np.log(target_R)
+        closeness_thr = np.log(closeness_thr)
+        der_thr = np.log(der_thr)
+    
+    tw_ACC = 0.5 #The timewindow for calculating ACC.
+    tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
+    nbrOfTimebins = 3 #Number of timebins
+    
+    ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
@@ -569,11 +578,54 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t):
     ACCtw_L = sum(abs(np.array(force_L[-indxstep_ACC:])-np.array(target_L[-indxstep_ACC:])))
     ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:])))  
     
+    #Time binned data
+    #Overshoot
+    #Undershoot
+    #Hand separation
+    #Volatility
+    timebins = []
+    bin_indices = []
+    overshoot_L,overshoot_R = [],[]
+    undershoot_L,undershoot_R = [],[]
+    handsep = []
+    volatility_L,volatility_R = [],[]
+    
+    diff_force_L  = force_L-target_L
+    diff_force_R = force_R-target_R
+    tmp_handsep = force_L-force_R
+    
+    tmp_os_L = (force_L>target_L) * diff_force_L
+    tmp_os_R = (force_R>target_R) * diff_force_R
+    tmp_us_L = (force_L<target_L) * diff_force_L
+    tmp_us_R = (force_R<target_R) * diff_force_R
+    
+    for itr in range(nbrOfTimebins):
+        if itr<nbrOfTimebins-1:
+            bin_indices.append(round(len(t)/nbrOfTimebins)*(itr+1))
+        else:
+            bin_indices.append(len(t)-1)
+            
+        timebins.append(t[bin_indices[-1]])
+
+        if itr == 0:
+            first_indx = 0
+        else:
+            first_indx = bin_indices[-2]
+            
+        overshoot_L.append(sum(tmp_os_L[first_indx:bin_indices[-1]]))
+        overshoot_R.append(sum(tmp_os_R[first_indx:bin_indices[-1]]))
+        undershoot_L.append(sum(abs(tmp_us_L[first_indx:bin_indices[-1]])))
+        undershoot_R.append(sum(abs(tmp_us_R[first_indx:bin_indices[-1]])))
+        handsep.append(sum(abs(tmp_handsep[first_indx:bin_indices[-1]])))
+        volatility_L.append(np.var(abs(diff_force_L[first_indx:bin_indices[-1]])))
+        volatility_R.append(np.var(abs(diff_force_R[first_indx:bin_indices[-1]])))
+    
     
     
     return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
-        time_on_target_L, time_on_target_R, force_diff
+        time_on_target_L, time_on_target_R, force_diff, timebins, overshoot_L, overshoot_R, undershoot_L, undershoot_R, \
+        handsep, volatility_L, volatility_R
 
 #%%Get the success for 150 ms, 200 ms or 250 ms.
 def check_success_times(force_L, force_R, target_L, target_R, t):
@@ -644,7 +696,7 @@ def check_success_times(force_L, force_R, target_L, target_R, t):
     return stability_thresholds, trial_success_time_L, trial_success_time_R, trial_success_time_both
 
 #%%Get the behavioural parameters from HT data
-def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
+def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
     import numpy as np
     
     force_L = np.array(force_L)
@@ -652,12 +704,24 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
     target_L = np.array(target_L)
     target_R = np.array(target_R)
     t = np.array(t)
-    tw_ACC = 0.5 #The timewindow for calculating ACC.
-    tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
+    
     closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
                         # and for time on target. 
-    ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
     der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
+    
+    if logtransform:
+        force_L = np.log(force_L)
+        force_R = np.log(force_R)
+        target_L = np.log(target_L)
+        target_R = np.log(target_R)
+        closeness_thr = np.log(closeness_thr)
+        der_thr = np.log(der_thr)
+    
+    tw_ACC = 0.5 #The timewindow for calculating ACC.
+    tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
+    nbrOfTimebins = 3 #Number of timebins
+    
+    ts = t[4]-t[3] #The timestep in the data. Need not be perfect. Just do between the third and fourth for now.
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
@@ -789,11 +853,53 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t):
             trial_success_time_R=t[itr]
             break
                         
+    #Time binned data
+    #Overshoot
+    #Undershoot
+    #Hand separation
+    #Volatility
+    timebins = []
+    bin_indices = []
+    overshoot_L,overshoot_R = [],[]
+    undershoot_L,undershoot_R = [],[]
+    handsep = []
+    volatility_L,volatility_R = [],[]
+    
+    diff_force_L  = force_L-target_L
+    diff_force_R = force_R-target_R
+    tmp_handsep = force_L-force_R
+    
+    tmp_os_L = (force_L>target_L) * diff_force_L
+    tmp_os_R = (force_R>target_R) * diff_force_R
+    tmp_us_L = (force_L<target_L) * diff_force_L
+    tmp_us_R = (force_R<target_R) * diff_force_R
+    
+    for itr in range(nbrOfTimebins):
+        if itr<nbrOfTimebins-1:
+            bin_indices.append(round(len(t)/nbrOfTimebins)*(itr+1))
+        else:
+            bin_indices.append(len(t)-1)
+            
+        timebins.append(t[bin_indices[-1]])
 
+        if itr == 0:
+            first_indx = 0
+        else:
+            first_indx = bin_indices[-2]
+            
+        overshoot_L.append(sum(tmp_os_L[first_indx:bin_indices[-1]]))
+        overshoot_R.append(sum(tmp_os_R[first_indx:bin_indices[-1]]))
+        undershoot_L.append(sum(abs(tmp_us_L[first_indx:bin_indices[-1]])))
+        undershoot_R.append(sum(abs(tmp_us_R[first_indx:bin_indices[-1]])))
+        handsep.append(sum(abs(tmp_handsep[first_indx:bin_indices[-1]])))
+        volatility_L.append(np.var(abs(diff_force_L[first_indx:bin_indices[-1]])))
+        volatility_R.append(np.var(abs(diff_force_R[first_indx:bin_indices[-1]])))
     
     return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
-        time_on_target_L, time_on_target_R, force_diff, trial_success_time_L, trial_success_time_R, trial_success_time_both
+        time_on_target_L, time_on_target_R, force_diff, trial_success_time_L, trial_success_time_R, \
+        trial_success_time_both, timebins, overshoot_L, overshoot_R, undershoot_L, undershoot_R, \
+        handsep, volatility_L, volatility_R
         
 #%%Get the variance in the last 500ms of each trial. MN
 def get_trial_variance_and_error(condition_data):

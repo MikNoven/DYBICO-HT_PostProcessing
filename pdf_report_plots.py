@@ -235,10 +235,10 @@ def tot_plot(print_data_means_L, print_data_std_L, print_data_means_R, print_dat
 #Change to where you have your data.
 path='/Users/gdf724/Data/ReScale/HomeTrainingTest/' 
 #List all subjects to process.
-list_of_subjs=['P003']
+list_of_subjs=['P005']
 report_dir='/Users/gdf724/Data/ReScale/HomeTrainingTest/Reports'
 
-overwrite = True
+overwrite = False
 
 ##############Make daily reports and build averages###################
 for subj in list_of_subjs:

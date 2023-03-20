@@ -38,12 +38,13 @@ def calc_gamelevel(duration):
 path='/Users/gdf724/Data/ReScale/HomeTrainingTest/' 
 #List all subjects to process.
 #list_of_subjs=['P001', 'P002', 'P003']
-list_of_subjs=['P004']
+list_of_subjs=['P004', 'P005']
 #Do you want to make trial GIFs for each run and condition? 
-createGIFS = True 
+createGIFS = False 
 #Do you want to make average trajectory plots for each run and condition?
-doRunPlots = True
-overwrite = False
+doRunPlots = False
+overwrite = True
+logtransform = True #Whether to logtransform data
 
 ##############Postprocessing################################
 #Loop over subjects.
@@ -90,6 +91,8 @@ for i in range(len(list_of_subjs)):
                      trial_time_on_target_L, trial_time_on_target_R, \
                      trial_forcediff, trial_success_time_L, trial_success_time_R, trial_success_time_both = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
                     
+                    trial_timebins, trial_overshoot_L, trial_overshoot_R, trial_undershoot_L, trial_undershoot_R, trial_handsep, trial_volatility_L, trial_volatility_R = [],[],[],[],[],[],[],[]
+                    
                     for itr in range(len(data)):
                         if data['targetTrial'][itr] != 'Baseline':
                             trial_condition.append(data['targetTrial'][itr])
@@ -109,7 +112,8 @@ for i in range(len(list_of_subjs)):
                             (tmp_trial_React_L, tmp_trial_React_R, tmp_trial_ACCtw_L, tmp_trial_ACCtw_R, tmp_trial_ACCimpact_L, \
                              tmp_trial_ACCimpact_R, tmp_trial_impacttime_L, tmp_trial_impacttime_R, tmp_trial_impact_L, tmp_trial_impact_R, \
                              tmp_trial_time_on_target_L, tmp_trial_time_on_target_R, \
-                             tmp_trial_forcediff, tmp_trial_success_time_L, tmp_trial_success_time_R, tmp_trial_success_time_both) = pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t)
+                             tmp_trial_forcediff, tmp_trial_success_time_L, tmp_trial_success_time_R, tmp_trial_success_time_both, \
+                             tmp_trial_timebins, tmp_trial_overshoot_L, tmp_trial_overshoot_R, tmp_trial_undershoot_L, tmp_trial_undershoot_R, tmp_trial_handsep, tmp_trial_volatility_L, tmp_trial_volatility_R) = pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t,logtransform)#pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t)
                             
                             trial_React_L.append(tmp_trial_React_L)
                             trial_React_R.append(tmp_trial_React_R)
@@ -127,27 +131,14 @@ for i in range(len(list_of_subjs)):
                             trial_success_time_L.append(tmp_trial_success_time_L)
                             trial_success_time_R.append(tmp_trial_success_time_R)
                             trial_success_time_both.append(tmp_trial_success_time_both)
-                            # save_pkl = pd.DataFrame()
-                            # save_pkl['condition'] = [trial_condition]
-                            # save_pkl['symmetry'] = [condgroup]
-                            # save_pkl['block'] = [block]
-                            # save_pkl['ReactTime_L'] = [tmp_trial_React_L]
-                            # save_pkl['ReactTime_R'] = tmp_trial_React_R
-                            # save_pkl['ACCtw_L'] = tmp_trial_ACCtw_L
-                            # save_pkl['ACCtw_R'] = tmp_trial_ACCtw_R
-                            # save_pkl['ACCimpact_L'] = tmp_trial_ACCimpact_L
-                            # save_pkl['ACCimpact_R'] = tmp_trial_ACCimpact_R
-                            # save_pkl['impacttime_L'] = tmp_trial_impacttime_L
-                            # save_pkl['impacttime_R'] = tmp_trial_impacttime_R
-                            # save_pkl['impact_L'] = tmp_trial_impact_L
-                            # save_pkl['impact_R'] = tmp_trial_impact_R
-                            # save_pkl['TimeOnTarget_L'] = tmp_trial_time_on_target_L
-                            # save_pkl['TimeOnTarget_R'] = tmp_trial_time_on_target_R
-                            # save_pkl['forcediff'] = tmp_trial_forcediff
-                            # save_pkl['trial_success_time_L'] = tmp_trial_success_time_L
-                            # save_pkl['trial_success_time_R'] = tmp_trial_success_time_R
-                            # save_pkl['trial_success_time_both'] = tmp_trial_success_time_both
-                            # trial_behaviour.append(save_pkl, ignore_index=True)
+                            trial_timebins.append(tmp_trial_timebins) 
+                            trial_overshoot_L.append(tmp_trial_overshoot_L) 
+                            trial_overshoot_R.append(tmp_trial_overshoot_R) 
+                            trial_undershoot_L.append(tmp_trial_undershoot_L) 
+                            trial_undershoot_R.append(tmp_trial_undershoot_R) 
+                            trial_handsep.append(tmp_trial_handsep) 
+                            trial_volatility_L.append(tmp_trial_volatility_L) 
+                            trial_volatility_R.append(tmp_trial_volatility_R)
                             
                         else:
                             if itr>0:
@@ -178,6 +169,14 @@ for i in range(len(list_of_subjs)):
                     trial_behaviour['trial_success_time_L'] = trial_success_time_L
                     trial_behaviour['trial_success_time_R'] = trial_success_time_R
                     trial_behaviour['trial_success_time_both'] = trial_success_time_both
+                    trial_behaviour['timebins'] = trial_timebins 
+                    trial_behaviour['overshoot_L'] = trial_overshoot_L 
+                    trial_behaviour['overshoot_R'] = trial_overshoot_R 
+                    trial_behaviour['undershoot_L'] = trial_undershoot_L 
+                    trial_behaviour['undershoot_R'] = trial_undershoot_R 
+                    trial_behaviour['handsep'] = trial_handsep 
+                    trial_behaviour['volatility_L'] = trial_volatility_L 
+                    trial_behaviour['volatility_R'] = trial_volatility_R
                     trial_behaviour.to_pickle(os.path.join(path,subj,sess,'PostProcessing','Trial_Behaviour_Sess_'+str(k+1)+'.pkl'))
                     
                     print(str(calc_gamelevel(tmp_t[-1])))
@@ -207,7 +206,7 @@ for i in range(len(list_of_subjs)):
                          tmp_ACCtw_L, tmp_ACCtw_R, tmp_ACCimpact_L, tmp_ACCimpact_R, \
                          tmp_impacttime_L, tmp_impacttime_R, tmp_impact_L, tmp_impact_R, \
                          tmp_time_on_target_L, tmp_time_on_target_R, \
-                         tmp_force_diff) = pph.get_avg_behaviour_HT(avg_L, avg_R, avg_target_L, avg_target_R, time)
+                         tmp_force_diff, tmp_timebins, tmp_overshoot_L, tmp_overshoot_R, tmp_undershoot_L, tmp_undershoot_R, tmp_handsep, tmp_volatility_L, tmp_volatility_R) = pph.get_avg_behaviour_HT(avg_L, avg_R, avg_target_L, avg_target_R, time,logtransform)
                         
                         #We don't know the correct direction here so just do averages. 
                             
@@ -228,7 +227,14 @@ for i in range(len(list_of_subjs)):
                         save_pkl['time_on_target_L'] = tmp_time_on_target_L
                         save_pkl['time_on_target_R'] = tmp_time_on_target_R   
                         save_pkl['forcediff'] = tmp_force_diff 
-                        
+                        save_pkl['timebins'] = [tmp_timebins] 
+                        save_pkl['overshoot_L'] = [tmp_overshoot_L] 
+                        save_pkl['overshoot_R'] = [tmp_overshoot_R] 
+                        save_pkl['undershoot_L'] = [tmp_undershoot_L] 
+                        save_pkl['undershoot_R'] = [tmp_undershoot_R] 
+                        save_pkl['handsep'] = [tmp_handsep] 
+                        save_pkl['volatility_L'] = [tmp_volatility_L] 
+                        save_pkl['volatility_R'] = [tmp_volatility_R]
             
                         #Append to behaviour dataframe
                         behaviour = behaviour.append(save_pkl, ignore_index=True)                    

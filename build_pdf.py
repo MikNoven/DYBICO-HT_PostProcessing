@@ -53,7 +53,7 @@ for line in subj:
         subj.remove(line)
 
 for subject in subj:
-    if subject != 'P004':
+    if subject == 'P005':
         report=PDF()
         subj_dir = os.path.join(report_dir,subject)
         tot_plots_per_page_1 = ['Tot_ToT_A.png', 'Tot_ToT_S.png', 'Tot_Err_A.png', 'Tot_Err_S.png', 'Tot_Succ_A.png', 'Tot_Succ_S.png', 'Tot_Handsep_A.png', 'Tot_Handsep_S.png']
