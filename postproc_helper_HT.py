@@ -467,7 +467,23 @@ def makeConditionGIFs(postprocpath, k, con_matrix, overwrite):
                             writer.append_data(image)       
         else:
             print("GIF already exists for "+con_data['targetTrial'][0])
-
+#%%Compare force trajectory and target and return integer comparison list.
+def compForceTarget(force,target,direction):
+    comp = []
+    if direction=='gt':
+        for itr in range(len(force)):
+            if force[itr]>target[itr]:
+                comp.append(1)
+            else:
+                comp.append(0)
+    else:
+        for itr in range(len(force)):
+            if force[itr]<target[itr]:
+                comp.append(1)
+            else:
+                comp.append(0)
+    return comp
+    
 #%%Get RT, ACC and trajectory diff measurements from trial or average-level data MN
 #Send in condition-specific data and calculated t from trial, run and subject.
 #Get values of RT and ACC as well as impacttime and impact-boolean from each trial.
@@ -484,14 +500,6 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
                         # and for time on target. 
     der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
     
-    if logtransform:
-        force_L = np.log(force_L)
-        force_R = np.log(force_R)
-        target_L = np.log(target_L)
-        target_R = np.log(target_R)
-        closeness_thr = np.log(closeness_thr)
-        der_thr = np.log(der_thr)
-    
     tw_ACC = 0.5 #The timewindow for calculating ACC.
     tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
     nbrOfTimebins = 3 #Number of timebins
@@ -500,6 +508,44 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
+    
+    ##################ACC from impact###############################    
+    impact_L = 0
+    ACCimpact_L = 0
+    impacttime_L = 0
+    impact_R = 0
+    ACCimpact_R = 0
+    impacttime_R = 0
+    
+    if logtransform:
+        for itr in range(len(force_L)):
+            if np.mean(np.log(force_L[itr:itr+indxstep_sw])) < np.mean(np.log(target_L[itr:itr+indxstep_sw]+closeness_thr)) and np.mean(np.log(force_L[itr:itr+indxstep_sw]) > np.log(target_L[itr:itr+indxstep_sw]-closeness_thr)):
+                ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+                impacttime_L = t[itr]
+                impact_L = 1
+                break
+    
+        for itr in range(len(force_R)):
+            if np.mean(np.log(force_R[itr:itr+indxstep_sw])) < np.mean(np.log(target_R[itr:itr+indxstep_sw]+closeness_thr)) and np.mean(np.log(force_R[itr:itr+indxstep_sw])) > np.mean(np.log(target_R[itr:itr+indxstep_sw]-closeness_thr)):
+                ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+                impacttime_R = t[itr]
+                impact_R = 1
+                break
+    else:
+        for itr in range(len(force_L)):
+            if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
+                ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+                impacttime_L = t[itr]
+                impact_L = 1
+                break
+    
+        for itr in range(len(force_R)):
+            if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
+                ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+                impacttime_R = t[itr]
+                impact_R = 1
+                break
+            
     
     ##################Reaction time############################
     #Derivative          
@@ -531,16 +577,31 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
 
     ##################Time on target###############################
     time_on_target_L = 0
-    for itr in range(len(force_L)):
-        if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
-            time_on_target_L = time_on_target_L+1
-    time_on_target_L=time_on_target_L/len(force_L)
-        
     time_on_target_R = 0
-    for itr in range(len(force_R)):
-        if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
-            time_on_target_R = time_on_target_R+1
-    time_on_target_R=time_on_target_R/len(force_R)
+    
+    if logtransform:
+        for itr in range(len(force_L)):
+            if np.log(force_L[itr]) < np.log(target_L[itr]+closeness_thr) and np.log(force_L[itr]) > np.log(target_L[itr]-closeness_thr):
+                time_on_target_L = time_on_target_L+1
+        time_on_target_L=time_on_target_L/len(force_L)
+            
+        
+        for itr in range(len(force_R)):
+            if np.log(force_R[itr]) < np.log(target_R[itr]+closeness_thr) and np.log(force_R[itr]) > np.log(target_R[itr]-closeness_thr):
+                time_on_target_R = time_on_target_R+1
+        time_on_target_R=time_on_target_R/len(force_R)
+    else:
+        for itr in range(len(force_L)):
+            if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
+                time_on_target_L = time_on_target_L+1
+        time_on_target_L=time_on_target_L/len(force_L)
+            
+        
+        for itr in range(len(force_R)):
+            if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
+                time_on_target_R = time_on_target_R+1
+        time_on_target_R=time_on_target_R/len(force_R)        
+    
     
     ##################Trajectory diff####################
     diffstart_indx = 0
@@ -550,30 +611,12 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
             diffstart_indx = itr
         if t[itr] >= 0.75 and diffstop_indx == 0:
             diffstop_indx = itr
-    force_diff = sum(abs(force_R[diffstart_indx:diffstop_indx]-force_L[diffstart_indx:diffstop_indx]))
+    if logtransform:
+        force_diff = sum(abs(np.array(np.log(force_R[diffstart_indx:diffstop_indx]))-np.array(np.log(force_L[diffstart_indx:diffstop_indx]))))
+    else:
+        force_diff = sum(abs(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx])))
     
-    ##################ACC from impact###############################    
-    
-    impact_L = 0
-    ACCimpact_L = 0
-    impacttime_L = 0
-    for itr in range(len(force_L)):
-        if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
-            impacttime_L = t[itr]
-            impact_L = 1
-            break
 
-    impact_R = 0
-    ACCimpact_R = 0
-    impacttime_R = 0
-    for itr in range(len(force_R)):
-        if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
-            impacttime_R = t[itr]
-            impact_R = 1
-            break
-    
     ##################ACC in timewindow#############################
     ACCtw_L = sum(abs(np.array(force_L[-indxstep_ACC:])-np.array(target_L[-indxstep_ACC:])))
     ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:])))  
@@ -590,14 +633,24 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
     handsep = []
     volatility_L,volatility_R = [],[]
     
-    diff_force_L  = force_L-target_L
-    diff_force_R = force_R-target_R
-    tmp_handsep = force_L-force_R
+    if logtransform:
+        diff_force_L  = abs(np.log(force_L)-np.log(target_L))
+        diff_force_R = abs(np.log(force_R)-np.log(target_R))
+        tmp_handsep = abs(np.log(force_L)-np.log(force_R))
+    else:
+        diff_force_L  = abs(force_L-target_L)
+        diff_force_R = abs(force_R-target_R)
+        tmp_handsep = abs(force_L-force_R)
     
-    tmp_os_L = (force_L>target_L) * diff_force_L
-    tmp_os_R = (force_R>target_R) * diff_force_R
-    tmp_us_L = (force_L<target_L) * diff_force_L
-    tmp_us_R = (force_R<target_R) * diff_force_R
+    os_elements_L = compForceTarget(force_L, target_L, 'gt')
+    os_elements_R = compForceTarget(force_R, target_R, 'gt')
+    us_elements_L = compForceTarget(force_L, target_L, 'lt')
+    us_elements_R = compForceTarget(force_R, target_R, 'lt')
+    
+    tmp_os_L = os_elements_L * diff_force_L
+    tmp_os_R = os_elements_R  * diff_force_R
+    tmp_us_L = us_elements_L * diff_force_L
+    tmp_us_R = us_elements_R * diff_force_R
     
     for itr in range(nbrOfTimebins):
         if itr<nbrOfTimebins-1:
@@ -614,11 +667,11 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
             
         overshoot_L.append(sum(tmp_os_L[first_indx:bin_indices[-1]]))
         overshoot_R.append(sum(tmp_os_R[first_indx:bin_indices[-1]]))
-        undershoot_L.append(sum(abs(tmp_us_L[first_indx:bin_indices[-1]])))
-        undershoot_R.append(sum(abs(tmp_us_R[first_indx:bin_indices[-1]])))
-        handsep.append(sum(abs(tmp_handsep[first_indx:bin_indices[-1]])))
-        volatility_L.append(np.var(abs(diff_force_L[first_indx:bin_indices[-1]])))
-        volatility_R.append(np.var(abs(diff_force_R[first_indx:bin_indices[-1]])))
+        undershoot_L.append(sum(tmp_us_L[first_indx:bin_indices[-1]]))
+        undershoot_R.append(sum(tmp_us_R[first_indx:bin_indices[-1]]))
+        handsep.append(sum(tmp_handsep[first_indx:bin_indices[-1]]))
+        volatility_L.append(np.var(diff_force_L[first_indx:bin_indices[-1]]))
+        volatility_R.append(np.var(diff_force_R[first_indx:bin_indices[-1]]))
     
     
     
@@ -705,18 +758,6 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
     target_R = np.array(target_R)
     t = np.array(t)
     
-    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
-                        # and for time on target. 
-    der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
-    
-    if logtransform:
-        force_L = np.log(force_L)
-        force_R = np.log(force_R)
-        target_L = np.log(target_L)
-        target_R = np.log(target_R)
-        closeness_thr = np.log(closeness_thr)
-        der_thr = np.log(der_thr)
-    
     tw_ACC = 0.5 #The timewindow for calculating ACC.
     tw_sw = 0.05 #The timewindow for sliding average to compare RTs and ACC
     nbrOfTimebins = 3 #Number of timebins
@@ -725,6 +766,11 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
     
     indxstep_ACC = int(np.round(tw_ACC/ts))
     indxstep_sw = int(np.round(tw_sw/ts))
+    
+    
+    closeness_thr = 0.05 #The threshold for being close enough to the target for the accuracy to start counting in ACCimpact
+                        # and for time on target. 
+    der_thr = 0.3 #Threshold of derivative for RT and ReactTime calculation.
     
 
     ##################Reaction time############################
@@ -757,16 +803,30 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
 
     ##################Time on target###############################
     time_on_target_L = 0
-    for itr in range(len(force_L)):
-        if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
-            time_on_target_L = time_on_target_L+1
-    time_on_target_L=time_on_target_L/len(force_L)
-        
     time_on_target_R = 0
-    for itr in range(len(force_R)):
-        if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
-            time_on_target_R = time_on_target_R+1
-    time_on_target_R=time_on_target_R/len(force_R)
+    
+    if logtransform:
+        for itr in range(len(force_L)):
+            if np.log(force_L[itr]) < np.log(target_L[itr]+closeness_thr) and np.log(force_L[itr]) > np.log(target_L[itr]-closeness_thr):
+                time_on_target_L = time_on_target_L+1
+        time_on_target_L=time_on_target_L/len(force_L)
+            
+        
+        for itr in range(len(force_R)):
+            if np.log(force_R[itr]) < np.log(target_R[itr]+closeness_thr) and np.log(force_R[itr]) > np.log(target_R[itr]-closeness_thr):
+                time_on_target_R = time_on_target_R+1
+        time_on_target_R=time_on_target_R/len(force_R)
+    else:
+        for itr in range(len(force_L)):
+            if abs(force_L[itr]-target_L[itr]) <= closeness_thr:
+                time_on_target_L = time_on_target_L+1
+        time_on_target_L=time_on_target_L/len(force_L)
+            
+        
+        for itr in range(len(force_R)):
+            if abs(force_R[itr]-target_R[itr]) <= closeness_thr:
+                time_on_target_R = time_on_target_R+1
+        time_on_target_R=time_on_target_R/len(force_R)        
     
     ##################Trajectory diff####################
     diffstart_indx = 0
@@ -776,30 +836,48 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
             diffstart_indx = itr
         if t[itr] >= 0.75 and diffstop_indx == 0:
             diffstop_indx = itr
-    force_diff = sum(abs(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx])))
-    
+    if logtransform:
+        force_diff = sum(abs(np.array(np.log(force_R[diffstart_indx:diffstop_indx]))-np.array(np.log(force_L[diffstart_indx:diffstop_indx]))))
+    else:
+        force_diff = sum(abs(np.array(force_R[diffstart_indx:diffstop_indx])-np.array(force_L[diffstart_indx:diffstop_indx])))
     ##################ACC from impact###############################    
     
     impact_L = 0
     ACCimpact_L = 0
     impacttime_L = 0
-    for itr in range(len(force_L)):
-        if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
-            impacttime_L = t[itr]
-            impact_L = 1
-            break
-
     impact_R = 0
     ACCimpact_R = 0
     impacttime_R = 0
-    for itr in range(len(force_R)):
-        if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
-            ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
-            impacttime_R = t[itr]
-            impact_R = 1
-            break
     
+    if logtransform:
+        for itr in range(len(force_L)):
+            if np.mean(np.log(force_L[itr:itr+indxstep_sw])) < np.mean(np.log(target_L[itr:itr+indxstep_sw]+closeness_thr)) and np.mean(np.log(force_L[itr:itr+indxstep_sw])) > np.mean(np.log(target_L[itr:itr+indxstep_sw]-closeness_thr)):
+                ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+                impacttime_L = t[itr]
+                impact_L = 1
+                break
+    
+        for itr in range(len(force_R)):
+            if np.mean(np.log(force_R[itr:itr+indxstep_sw])) < np.mean(np.log(target_R[itr:itr+indxstep_sw]+closeness_thr)) and np.mean(np.log(force_R[itr:itr+indxstep_sw])) > np.mean(np.log(target_R[itr:itr+indxstep_sw]-closeness_thr)):
+                ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+                impacttime_R = t[itr]
+                impact_R = 1
+                break
+    else:
+        for itr in range(len(force_L)):
+            if abs(np.mean(force_L[itr:itr+indxstep_sw])-np.mean(target_L[itr:itr+indxstep_sw])) <= closeness_thr:
+                ACCimpact_L = sum(abs(force_L[itr:]-target_L[itr:]))/(t[-1]-t[itr])
+                impacttime_L = t[itr]
+                impact_L = 1
+                break
+    
+        for itr in range(len(force_R)):
+            if abs(np.mean(force_R[itr:itr+indxstep_sw])-np.mean(target_R[itr:itr+indxstep_sw])) <= closeness_thr:
+                ACCimpact_R = sum(abs(force_R[itr:]-target_R[itr:]))/(t[-1]-t[itr])
+                impacttime_R = t[itr]
+                impact_R = 1
+                break
+            
     ##################ACC in timewindow#############################
     ACCtw_L = sum(abs(np.array(force_L[-indxstep_ACC:])-np.array(target_L[-indxstep_ACC:])))
     ACCtw_R = sum(abs(np.array(force_R[-indxstep_ACC:])-np.array(target_R[-indxstep_ACC:]))) 
@@ -865,15 +943,25 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
     handsep = []
     volatility_L,volatility_R = [],[]
     
-    diff_force_L  = force_L-target_L
-    diff_force_R = force_R-target_R
-    tmp_handsep = force_L-force_R
+    if logtransform:
+        diff_force_L  = abs(np.log(force_L)-np.log(target_L))
+        diff_force_R = abs(np.log(force_R)-np.log(target_R))
+        tmp_handsep = abs(np.log(force_L)-np.log(force_R))
+    else:
+        diff_force_L  = abs(force_L-target_L)
+        diff_force_R = abs(force_R-target_R)
+        tmp_handsep = abs(force_L-force_R)
     
-    tmp_os_L = (force_L>target_L) * diff_force_L
-    tmp_os_R = (force_R>target_R) * diff_force_R
-    tmp_us_L = (force_L<target_L) * diff_force_L
-    tmp_us_R = (force_R<target_R) * diff_force_R
+    os_elements_L = compForceTarget(force_L, target_L, 'gt')
+    os_elements_R = compForceTarget(force_R, target_R, 'gt')
+    us_elements_L = compForceTarget(force_L, target_L, 'lt')
+    us_elements_R = compForceTarget(force_R, target_R, 'lt')
     
+    tmp_os_L = os_elements_L * diff_force_L
+    tmp_os_R = os_elements_R  * diff_force_R
+    tmp_us_L = us_elements_L * diff_force_L
+    tmp_us_R = us_elements_R * diff_force_R
+        
     for itr in range(nbrOfTimebins):
         if itr<nbrOfTimebins-1:
             bin_indices.append(round(len(t)/nbrOfTimebins)*(itr+1))
@@ -889,11 +977,11 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
             
         overshoot_L.append(sum(tmp_os_L[first_indx:bin_indices[-1]]))
         overshoot_R.append(sum(tmp_os_R[first_indx:bin_indices[-1]]))
-        undershoot_L.append(sum(abs(tmp_us_L[first_indx:bin_indices[-1]])))
-        undershoot_R.append(sum(abs(tmp_us_R[first_indx:bin_indices[-1]])))
-        handsep.append(sum(abs(tmp_handsep[first_indx:bin_indices[-1]])))
-        volatility_L.append(np.var(abs(diff_force_L[first_indx:bin_indices[-1]])))
-        volatility_R.append(np.var(abs(diff_force_R[first_indx:bin_indices[-1]])))
+        undershoot_L.append(sum(tmp_us_L[first_indx:bin_indices[-1]]))
+        undershoot_R.append(sum(tmp_us_R[first_indx:bin_indices[-1]]))
+        handsep.append(sum(tmp_handsep[first_indx:bin_indices[-1]]))
+        volatility_L.append(np.var(diff_force_L[first_indx:bin_indices[-1]]))
+        volatility_R.append(np.var(diff_force_R[first_indx:bin_indices[-1]]))
     
     return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \

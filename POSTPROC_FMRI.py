@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Feb  2 16:19:17 2022
+Created on Mon Jun  5 15:53:53 2023
 
 @author: Mikael Novén noven@nexs.ku.dk
 
-A postproc script for gathering hometraining data.
+A postproc script for gathering fMRI data.
+
+TODO:
+    Make something with baseline. Stability?
 
 """
 
@@ -14,56 +17,35 @@ import os
 import pandas as pd 
 import glob
 import postproc_helper_HT as pph 
-import matplotlib.pyplot as plt
-import numpy as np
-import HT_pdf_report_plots as reportbuilder
-
-##############Helper functions###################
-
-def calc_gamelevel(duration):
-    if duration > 1.9 and duration < 2.1:
-        gLvl = 1
-    elif duration > 1.7 and duration < 1.9:
-        gLvl = 2
-    elif duration > 1.5 and duration < 1.7:
-        gLvl = 3
-    elif duration > 1.3 and duration < 1.5:
-        gLvl = 4
-    elif duration > 1.1 and duration < 1.3:
-        gLvl = 5
-        
-    return gLvl
-
+import fMRI_behaviour_video as videomaker
+import fMRI_pdf_report_plots as reportmaker
 
 ##############Set paths and plot options###################
 #Change to where you have your data.
-path='/Users/gdf724/Data/ReScale/ReScale2_HomeTraining'
-report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/HomeTraining/'
+path='/Users/gdf724/Data/ReScale/ReScale2_fMRI_behavior'
+report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/fMRI/'
 #List all subjects to process.
 list_of_subjs=['y001']
 #Do you want to make trial GIFs for each run and condition? 
-createGIFS = False 
-#Do you want to make average trajectory plots for each run and condition?
-doRunPlots = False
+makeVideos = False 
+makeReport = True
+#Do you want to f average trajectory plots for each run and condition?
 overwrite = False
-makepdf = True
 logtransform = True #Whether to logtransform data
 
-##############Postprocessing################################
-#Loop over subjects.
 for i in range(len(list_of_subjs)):
     subj = list_of_subjs[i]
-    HT_days = pph.get_HTfolders(path,subj)
+    fMRI_days = pph.get_HTfolders(path,subj)
     
-    for day in range(len(HT_days)):
-            sess = HT_days[day]
+    for day in range(len(fMRI_days)):
+            sess = fMRI_days[day]
             if not os.path.exists(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_1.pkl')) or overwrite:
-    
+                    
                 #Fix the data to the proper structure and in a PostProcessing-folder
                 pph.make_PP_folder(sess)
                 maxforce = pph.get_maxforce(sess)
                 #if len(os.listdir(os.path.join(sess,'PostProcessing'))) < 2:
-                for blockfile in glob.glob(os.path.join(sess,'hometraining_output_*.pkl')):
+                for blockfile in glob.glob(os.path.join(sess,'output_file_*.pkl')):
                     pph.reshape_data(blockfile)
                         
                 DATAfiles = pph.get_DATAfiles(sess)
@@ -76,18 +58,18 @@ for i in range(len(list_of_subjs)):
                     filepath = os.path.join(path,subj,sess,'PostProcessing',datafile) #Modify this and later depending on save structure.
                     
                     # Read and sort the data
-                    file=pd.read_pickle(filepath)
-                    data = pph.drop_non_trials(file)
+                    data=pd.read_pickle(filepath)
+                    #data = pph.drop_non_trials(file)
                     
                     ##############Postprocessing trials#################################  
                     #Save information about block 
                     trial_condition = []
                     condgroup = []
                     block = []
-                    gameLvls = []
                     
                     S_block = 1
                     A_block = 1
+                    B_block = 1
                     
                     trial_React_L, trial_React_R, trial_ACCtw_L, trial_ACCtw_R, trial_ACCimpact_L, \
                      trial_ACCimpact_R, trial_impacttime_L, trial_impacttime_R, trial_impact_L, trial_impact_R, \
@@ -101,7 +83,7 @@ for i in range(len(list_of_subjs)):
                     last_target_R = 0
                     
                     for itr in range(len(data)):
-                        if data['targetTrial'][itr] != 'Baseline':
+                        if data['targetTrial'][itr] != 'Pause_target':
                             trial_condition.append(data['targetTrial'][itr])
                             condgroup.append(data['targetTrial'][itr][0])
                             
@@ -109,12 +91,14 @@ for i in range(len(list_of_subjs)):
                                 block.append(S_block)
                             elif data['targetTrial'][itr][0] == 'A':
                                 block.append(A_block)
+                            elif data['targetTrial'][itr][0] == 'B':
+                                block.append(B_block)
+                                
                             tmp_t = [(data['time'][itr][j]-data['time'][itr][0]) for j in range(len(data['time'][itr]))]
                             tmp_target_L = [data['targets'][itr][k][0] for k in range(len(tmp_t))]
                             tmp_target_R = [data['targets'][itr][k][1] for k in range(len(tmp_t))]
                             
                             tmp_dur = data['duration']
-                            gameLvls.append(calc_gamelevel(tmp_dur[0]))
                             
                             (tmp_trial_React_L, tmp_trial_React_R, tmp_trial_ACCtw_L, tmp_trial_ACCtw_R, tmp_trial_ACCimpact_L, \
                              tmp_trial_ACCimpact_R, tmp_trial_impacttime_L, tmp_trial_impacttime_R, tmp_trial_impact_L, tmp_trial_impact_R, \
@@ -163,13 +147,14 @@ for i in range(len(list_of_subjs)):
                                     S_block = S_block+1
                                 elif data['targetTrial'][itr-1][0] == 'A':
                                     A_block = A_block+1
+                                elif data['targetTrial'][itr-1][0] == 'B':
+                                    B_block = B_block+1
                     
                     #Save everything
                     trial_behaviour = pd.DataFrame()
                     trial_behaviour['condition'] = trial_condition
                     trial_behaviour['symmetry'] = condgroup
                     trial_behaviour['block'] = block
-                    trial_behaviour['gamelevel'] = gameLvls
                     trial_behaviour['ReactTime_L'] = trial_React_L
                     trial_behaviour['ReactTime_R'] = trial_React_R
                     trial_behaviour['ACCtw_L'] = trial_ACCtw_L
@@ -206,10 +191,6 @@ for i in range(len(list_of_subjs)):
                     
                     con_matrix = pph.sort_data_by_condition(data) 
                     
-                    #Create GIFs, the forth condition is whether or not to overwrite.
-                    if createGIFS:
-                        pph.makeConditionGIFs(os.path.join(path,subj,sess,'PostProcessing'), k, con_matrix, False) 
-            
                     #Loop over conditions.
                     for c in range(len(con_matrix)):
                         con_data = con_matrix[c]
@@ -259,14 +240,13 @@ for i in range(len(list_of_subjs)):
                         #Append to behaviour dataframe
                         behaviour = behaviour.append(save_pkl, ignore_index=True)                    
                         
+            
+                    #Save behavior to file
                     behaviour.to_pickle(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_'+str(k+1)+'.pkl'))
+                    
+    if makeVideos:
+        videomaker.fMRI_behaviour_video(path,report_dir,subj)
     
-    if makepdf:
-        reportbuilder.pdf_report_plots(path, report_dir, subj)
-        
-        
-        
-        
-        
-        
-        
+    if makeReport:
+        reportmaker.fMRI_pdf_report_plots(path,report_dir,subj)
+
