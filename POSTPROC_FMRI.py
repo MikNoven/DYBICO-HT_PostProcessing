@@ -17,21 +17,29 @@ import glob
 import postproc_helper_HT as pph 
 import fMRI_behaviour_video as videomaker
 import fMRI_pdf_report_plots as reportmaker
+import fMRI_collect_stats as statsmaker
 
 ##############Set paths and plot options###################
 #Change to where you have your data.
 path='/Users/gdf724/Data/ReScale/ReScale1_fMRI_behavior'
 report_dir='/Users/gdf724/Data/ReScale/ReScale1_reports/fMRI/'
 #List all subjects to process.
-RS1=True
-sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
-list_of_subjs = [x[-7:-1] for x in sub_dir_list]
-#Do you want to make trial GIFs for each run and condition? 
+RS1=True #ReScale1 structure slightly different due to not longitudinal.
+if RS1:
+    sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
+    list_of_subjs = [x[-7:-1] for x in sub_dir_list]
+else:
+    list_of_subjs = ['y001']
+#Do you want to make videos and a pdf report?
 makeVideos = False 
 makeReport = True
 #Do you want to f average trajectory plots for each run and condition?
 overwrite = False
 logtransform = True #Whether to logtransform data
+make_stats_file = True
+if make_stats_file:
+    #This needs a path to the background csv file.
+    background_path = '/Users/gdf724/Data/ReScale/ReScale1_background/RS1_background.csv'
 
 for i in range(len(list_of_subjs)):
     subj = list_of_subjs[i]
@@ -255,4 +263,9 @@ for i in range(len(list_of_subjs)):
             reportmaker.RS1_fMRI_pdf_report_plots(sub_dir_list[i],report_dir,subj)
         else:
             reportmaker.fMRI_pdf_report_plots(path,report_dir,subj)
+    
+if make_stats_file:
+    statsmaker.fMRI_collect_stats(path,background_path,RS1)
+    
+        
 
