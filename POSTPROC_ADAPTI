@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jun  5 15:53:53 2023
+Created on Wed Jun 21 19:02:59 2023
+A postproc script for gathering Adaptation test data.
 
-@author: Mikael Novén noven@nexs.ku.dk
-
-A postproc script for gathering fMRI data.
-
-
+@author: gdf724
 """
 
 ##############Import necessary libraries###################
@@ -15,33 +12,27 @@ import os
 import pandas as pd 
 import glob
 import postproc_helper_HT as pph 
-import fMRI_behaviour_video as videomaker
-import fMRI_pdf_report_plots as reportmaker
+import adapt_pdf_report_plots as reportmaker
 
 ##############Set paths and plot options###################
 #Change to where you have your data.
-path='/Users/gdf724/Data/ReScale/ReScale1_fMRI_behavior'
-report_dir='/Users/gdf724/Data/ReScale/ReScale1_reports/fMRI/'
+path='/Users/gdf724/Data/ReScale/ReScale2_Adapt'
+report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/Adapt/'
 #List all subjects to process.
-RS1=True
-sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
-list_of_subjs = [x[-7:-1] for x in sub_dir_list]
+list_of_subjs=['y001']
 #Do you want to make trial GIFs for each run and condition? 
 makeVideos = False 
-makeReport = True
+makeReport = False
 #Do you want to f average trajectory plots for each run and condition?
 overwrite = False
 logtransform = True #Whether to logtransform data
 
 for i in range(len(list_of_subjs)):
     subj = list_of_subjs[i]
-    if RS1:
-        fMRI_days =[sub_dir_list[i]]
-    else:
-        fMRI_days = pph.get_HTfolders(path,subj)
+    adapt_days = pph.get_HTfolders(path,subj)
     
-    for day in range(len(fMRI_days)):
-            sess = fMRI_days[day]
+    for day in range(len(adapt_days)):
+            sess = adapt_days[day]
             if not os.path.exists(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_1.pkl')) or overwrite:
                     
                 #Fix the data to the proper structure and in a PostProcessing-folder
@@ -55,6 +46,10 @@ for i in range(len(list_of_subjs)):
                 
                 #Loop over sessions.
                 for k in range(len(DATAfiles)):
+                    if k==0:
+                        gain_function = 'norm'
+                    else:
+                        gain_function = 'log'
                     datafile = DATAfiles[k]  
                     
                     
@@ -72,7 +67,6 @@ for i in range(len(list_of_subjs)):
                     
                     S_block = 1
                     A_block = 1
-                    B_block = 1
                     
                     trial_React_L, trial_React_R, trial_ACCtw_L, trial_ACCtw_R, trial_ACCimpact_L, \
                      trial_ACCimpact_R, trial_impacttime_L, trial_impacttime_R, trial_impact_L, trial_impact_R, \
@@ -82,6 +76,8 @@ for i in range(len(list_of_subjs)):
                     trial_timebins, trial_overshoot_L, trial_overshoot_R, trial_undershoot_L, trial_undershoot_R, trial_handsep, trial_volatility_L, trial_volatility_R = [],[],[],[],[],[],[],[]
                     trial_forceshift_L, trial_forceshift_R, trial_condshift = [],[],[]
                     
+                    trial_gainfunction = []
+                    
                     last_target_L = 0
                     last_target_R = 0
                     
@@ -89,13 +85,13 @@ for i in range(len(list_of_subjs)):
                         if data['targetTrial'][itr] != 'Pause_target':
                             trial_condition.append(data['targetTrial'][itr])
                             condgroup.append(data['targetTrial'][itr][0])
+                            trial_gainfunction.append(gain_function)
                             
                             if data['targetTrial'][itr][0] == 'S':
                                 block.append(S_block)
                             elif data['targetTrial'][itr][0] == 'A':
                                 block.append(A_block)
-                            elif data['targetTrial'][itr][0] == 'B':
-                                block.append(B_block)
+
                                 
                             tmp_t = [(data['time'][itr][j]-data['time'][itr][0]) for j in range(len(data['time'][itr]))]
                             tmp_target_L = [data['targets'][itr][k][0] for k in range(len(tmp_t))]
@@ -150,14 +146,14 @@ for i in range(len(list_of_subjs)):
                                     S_block = S_block+1
                                 elif data['targetTrial'][itr-1][0] == 'A':
                                     A_block = A_block+1
-                                elif data['targetTrial'][itr-1][0] == 'B':
-                                    B_block = B_block+1
+
                     
                     #Save everything
                     trial_behaviour = pd.DataFrame()
                     trial_behaviour['condition'] = trial_condition
                     trial_behaviour['symmetry'] = condgroup
                     trial_behaviour['block'] = block
+                    trial_behaviour['gain_function'] = trial_gainfunction
                     trial_behaviour['ReactTime_L'] = trial_React_L
                     trial_behaviour['ReactTime_R'] = trial_React_R
                     trial_behaviour['ACCtw_L'] = trial_ACCtw_L
@@ -218,6 +214,7 @@ for i in range(len(list_of_subjs)):
                         #Average
                         save_pkl = pd.DataFrame()
                         save_pkl['Condition'] = [cond] #Possibly minus 1
+                        save_pkl['gain_function'] = [gain_function]
                         save_pkl['React_L'] = tmp_React_L
                         save_pkl['React_R'] = tmp_React_R            
                         save_pkl['ACCtw_L'] = tmp_ACCtw_L
@@ -246,13 +243,9 @@ for i in range(len(list_of_subjs)):
             
                     #Save behavior to file
                     behaviour.to_pickle(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_'+str(k+1)+'.pkl'))
-                    
-    if makeVideos:
-        videomaker.fMRI_behaviour_video(path,report_dir,subj)
+
     
     if makeReport:
-        if RS1:
-            reportmaker.RS1_fMRI_pdf_report_plots(sub_dir_list[i],report_dir,subj)
-        else:
-            reportmaker.fMRI_pdf_report_plots(path,report_dir,subj)
+        reportmaker.adapt_pdf_report_plots(path,report_dir,subj)
+
 

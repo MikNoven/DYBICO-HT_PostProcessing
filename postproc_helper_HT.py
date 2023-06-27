@@ -224,7 +224,6 @@ def make_cond_folder(filepath, con_data):
     # os.chdir(os.path.split(filepath)[0])               
     
 
-
 #%% Get the hometraining folders
 def get_HTfolders(datapath,subj):
     import os 

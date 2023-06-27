@@ -903,6 +903,431 @@ def fMRI_pdf_report_plots(path,report_dir,subj):
     os.rename(subj+'_fMRI.pdf', os.path.join(subj_dir,subj+'_fMRI.pdf'))
     
         
+def RS1_fMRI_pdf_report_plots(path,report_dir,subj):
+    overwrite = True
+    
+    ##############Make daily reports and build averages###################
+    
+    max_forces_L=[] 
+    max_forces_R=[]
+    nbrOfTimeBins=3 #Time bins for overshoot, undershoot, and volatility.
+    #Make subject dir
+    if not os.path.exists(os.path.join(report_dir,subj)):
+        os.makedirs(os.path.join(report_dir,subj))
+
+    day_save_folder = os.path.join(report_dir,subj)
+    
+    if not os.path.exists(day_save_folder):
+        os.makedirs(day_save_folder)
         
+    day_path = path
+    with open(os.path.join(day_path,'PostProcessing','maxforce.csv')) as mf:
+        max_forces_L.append(float(mf.readline())) #Double check the order of the hands.
+        max_forces_R.append(float(mf.readline()))
+    #Make averages of performance measures and start building daily reports.
+    #Daily report:
+    # Maybe header with time of day, max force, composite sleep, and physical activity. 
+    # 1. Sess averages
+    # 2. Block averages
+    # 3. Trial information within blocks (plus save number of trial successes for A and S)
+    sess_ToT_asym_L = [[] for x in range(4)] #List of every value for the entire day. One per session.
+    sess_ToT_asym_R = [[] for x in range(4)]
+    sess_ToT_sym_L = [[] for x in range(4)]
+    sess_ToT_sym_R = [[] for x in range(4)]
+    sess_err_asym_L = [[] for x in range(4)]
+    sess_err_asym_R = [[] for x in range(4)]
+    sess_err_sym_L = [[] for x in range(4)]
+    sess_err_sym_R = [[] for x in range(4)]
+    sess_impacttime_asym_L = [[] for x in range(4)]
+    sess_impacttime_asym_R = [[] for x in range(4)]
+    sess_impacttime_sym_L = [[] for x in range(4)]
+    sess_impacttime_sym_R = [[] for x in range(4)]
+    sess_impact_asym_L = [[] for x in range(4)]
+    sess_impact_asym_R = [[] for x in range(4)]
+    sess_impact_sym_L = [[] for x in range(4)]
+    sess_impact_sym_R = [[] for x in range(4)]
+    sess_handsep_asym = [[] for x in range(4)] 
+    sess_handsep_sym = [[] for x in range(4)]
+    sess_overshoot_L_asym = [[0,0,0] for x in range(4)] 
+    sess_overshoot_R_asym = [[0,0,0] for x in range(4)]
+    sess_overshoot_L_sym = [[0,0,0] for x in range(4)]
+    sess_overshoot_R_sym = [[0,0,0] for x in range(4)]
+    sess_undershoot_L_asym = [[0,0,0] for x in range(4)] 
+    sess_undershoot_R_asym = [[0,0,0] for x in range(4)]
+    sess_undershoot_L_sym = [[0,0,0] for x in range(4)]
+    sess_undershoot_R_sym = [[0,0,0] for x in range(4)]
+    sess_tb_handsep_asym = [[0,0,0] for x in range(4)]
+    sess_tb_handsep_sym = [[0,0,0] for x in range(4)]
+    sess_volatility_L_asym = [[0,0,0] for x in range(4)]
+    sess_volatility_R_asym = [[0,0,0] for x in range(4)]
+    sess_volatility_L_sym = [[0,0,0] for x in range(4)]
+    sess_volatility_R_sym = [[0,0,0] for x in range(4)]
+    sess_std_ToT_asym_L = [[] for x in range(4)] #List of every value for the entire day. One per session.
+    sess_std_ToT_asym_R = [[] for x in range(4)]
+    sess_std_ToT_sym_L = [[] for x in range(4)]
+    sess_std_ToT_sym_R = [[] for x in range(4)]
+    sess_std_err_asym_L = [[] for x in range(4)]
+    sess_std_err_asym_R = [[] for x in range(4)]
+    sess_std_err_sym_L = [[] for x in range(4)]
+    sess_std_err_sym_R = [[] for x in range(4)]
+    sess_std_impacttime_asym_L = [[] for x in range(4)]
+    sess_std_impacttime_asym_R = [[] for x in range(4)]
+    sess_std_impacttime_sym_L = [[] for x in range(4)]
+    sess_std_impacttime_sym_R = [[] for x in range(4)]
+    sess_std_impact_asym_L = [[] for x in range(4)]
+    sess_std_impact_asym_R = [[] for x in range(4)]
+    sess_std_impact_sym_L = [[] for x in range(4)]
+    sess_std_impact_sym_R = [[] for x in range(4)]
+    sess_std_handsep_asym = [[] for x in range(4)] 
+    sess_std_handsep_sym = [[] for x in range(4)]
+    sess_std_overshoot_L_asym = [[0,0,0] for x in range(4)] 
+    sess_std_overshoot_R_asym = [[0,0,0] for x in range(4)]
+    sess_std_overshoot_L_sym = [[0,0,0] for x in range(4)]
+    sess_std_overshoot_R_sym = [[0,0,0] for x in range(4)]
+    sess_std_undershoot_L_asym = [[0,0,0] for x in range(4)] 
+    sess_std_undershoot_R_asym = [[0,0,0] for x in range(4)]
+    sess_std_undershoot_L_sym = [[0,0,0] for x in range(4)]
+    sess_std_undershoot_R_sym = [[0,0,0] for x in range(4)]
+    sess_std_tb_handsep_asym = [[0,0,0] for x in range(4)]
+    sess_std_tb_handsep_sym = [[0,0,0] for x in range(4)]
+    sess_std_volatility_L_asym = [[0,0,0] for x in range(4)]
+    sess_std_volatility_R_asym = [[0,0,0] for x in range(4)]
+    sess_std_volatility_L_sym = [[0,0,0] for x in range(4)]
+    sess_std_volatility_R_sym = [[0,0,0] for x in range(4)]
+    
+    sess_ToT_bas_L = [[] for x in range(4)]
+    sess_ToT_bas_R = [[] for x in range(4)]
+    sess_handsep_bas = [[] for x in range(4)]
+    sess_overshoot_L_bas = [[0,0,0] for x in range(4)]
+    sess_overshoot_R_bas = [[0,0,0] for x in range(4)]
+    sess_undershoot_L_bas = [[0,0,0] for x in range(4)]
+    sess_undershoot_R_bas = [[0,0,0] for x in range(4)]
+    sess_volatility_L_bas = [[0,0,0] for x in range(4)]
+    sess_volatility_R_bas = [[0,0,0] for x in range(4)]
+    
+    sess_std_ToT_bas_L = [[] for x in range(4)]
+    sess_std_ToT_bas_R = [[] for x in range(4)]
+    sess_std_handsep_bas = [[] for x in range(4)]
+    sess_std_overshoot_L_bas = [[0,0,0] for x in range(4)]
+    sess_std_overshoot_R_bas = [[0,0,0] for x in range(4)]
+    sess_std_undershoot_L_bas = [[0,0,0] for x in range(4)]
+    sess_std_undershoot_R_bas = [[0,0,0] for x in range(4)]
+    sess_std_volatility_L_bas = [[0,0,0] for x in range(4)]
+    sess_std_volatility_R_bas = [[0,0,0] for x in range(4)]
+    
+
+    for sess_itr in range(4):
+        sess_trial_data = pd.read_pickle(os.path.join(day_path,'PostProcessing','Trial_Behaviour_Sess_'+str(sess_itr+1)+'.pkl'))
+        
+        (A_blocks, S_blocks, B_blocks) = get_block_data(sess_trial_data)
+        #Make the session-specific plots and save them in reports folder.
+        block_ToT_asym_L = [[] for x in range(len(A_blocks))] 
+        block_ToT_asym_R = [[] for x in range(len(A_blocks))]
+        block_ToT_sym_L = [[] for x in range(len(S_blocks))]
+        block_ToT_sym_R = [[] for x in range(len(S_blocks))]
+        block_err_asym_L = [[] for x in range(len(A_blocks))]
+        block_err_asym_R = [[] for x in range(len(A_blocks))]
+        block_err_sym_L = [[] for x in range(len(S_blocks))]
+        block_err_sym_R = [[] for x in range(len(S_blocks))]
+        block_impacttime_asym_L = [[] for x in range(len(A_blocks))]
+        block_impacttime_asym_R = [[] for x in range(len(A_blocks))]
+        block_impacttime_sym_L = [[] for x in range(len(S_blocks))]
+        block_impacttime_sym_R = [[] for x in range(len(S_blocks))]
+        block_impact_asym_L = [[] for x in range(len(A_blocks))]
+        block_impact_asym_R = [[] for x in range(len(A_blocks))]
+        block_impact_sym_L = [[] for x in range(len(S_blocks))]
+        block_impact_sym_R = [[] for x in range(len(S_blocks))]
+        block_handsep_asym = [[] for x in range(len(A_blocks))] 
+        block_handsep_sym = [[] for x in range(len(S_blocks))]
+        block_condition_asym = [[] for x in range(len(A_blocks))]
+        block_condition_sym = [[] for x in range(len(S_blocks))]
+        block_overshoot_L_asym = [[] for x in range(len(A_blocks))]
+        block_overshoot_R_asym = [[] for x in range(len(A_blocks))]
+        block_overshoot_L_sym = [[] for x in range(len(S_blocks))]
+        block_overshoot_R_sym = [[] for x in range(len(S_blocks))]
+        block_undershoot_L_asym = [[] for x in range(len(A_blocks))]
+        block_undershoot_R_asym = [[] for x in range(len(A_blocks))]
+        block_undershoot_L_sym = [[] for x in range(len(S_blocks))]
+        block_undershoot_R_sym = [[] for x in range(len(S_blocks))]
+        block_tb_handsep_asym = [[] for x in range(len(A_blocks))]
+        block_tb_handsep_sym = [[] for x in range(len(S_blocks))]
+        block_volatility_L_asym = [[] for x in range(len(A_blocks))]
+        block_volatility_R_asym = [[] for x in range(len(A_blocks))]
+        block_volatility_L_sym = [[] for x in range(len(S_blocks))]
+        block_volatility_R_sym = [[] for x in range(len(S_blocks))]
+        
+        block_condition_bas = [[] for x in range(len(B_blocks))]
+        block_ToT_bas_L = [[] for x in range(len(B_blocks))]
+        block_ToT_bas_R = [[] for x in range(len(B_blocks))]
+        block_handsep_bas = [[] for x in range(len(B_blocks))]
+        block_overshoot_L_bas = [[] for x in range(len(B_blocks))]
+        block_overshoot_R_bas = [[] for x in range(len(B_blocks))]
+        block_undershoot_L_bas = [[] for x in range(len(B_blocks))]
+        block_undershoot_R_bas = [[] for x in range(len(B_blocks))]
+        block_volatility_L_bas = [[] for x in range(len(B_blocks))]
+        block_volatility_R_bas = [[] for x in range(len(B_blocks))]
+        
+        #Build asymmetry data set
+        for block_itr in range(len(A_blocks)): #This assumes equal number of blocks. 
+            for trial_itr in range(len(A_blocks[block_itr])):
+                tmp_data = A_blocks[block_itr][trial_itr]
+                block_condition_asym[block_itr].append(tmp_data['condition'])
+                block_ToT_asym_L[block_itr].append(tmp_data['TimeOnTarget_L'])
+                block_ToT_asym_R[block_itr].append(tmp_data['TimeOnTarget_R'])
+                block_err_asym_L[block_itr].append(tmp_data['ACCtw_L'])
+                block_err_asym_R[block_itr].append(tmp_data['ACCtw_R'])
+                if tmp_data['impact_L'] == 1:
+                    block_impacttime_asym_L[block_itr].append(tmp_data['impacttime_L'])
+                else:
+                    block_impacttime_asym_L[block_itr].append(np.nan)
+                if tmp_data['impact_R'] == 1:
+                    block_impacttime_asym_R[block_itr].append(tmp_data['impacttime_R'])
+                else:
+                    block_impacttime_asym_R[block_itr].append(np.nan)
+                block_impact_asym_L[block_itr].append(tmp_data['impact_L'])
+                block_impact_asym_R[block_itr].append(tmp_data['impact_R'])
+                block_handsep_asym[block_itr].append(tmp_data['forcediff'])
+                block_overshoot_L_asym[block_itr].append(tmp_data['overshoot_L'])
+                block_overshoot_R_asym[block_itr].append(tmp_data['overshoot_R'])
+                block_undershoot_L_asym[block_itr].append(tmp_data['undershoot_L'])
+                block_undershoot_R_asym[block_itr].append(tmp_data['undershoot_R'])
+                block_volatility_L_asym[block_itr].append(tmp_data['volatility_L'])
+                block_volatility_R_asym[block_itr].append(tmp_data['volatility_R'])
+        #Build symmetry dataset
+        for block_itr in range(len(S_blocks)): #This assumes equal number of blocks. 
+            for trial_itr in range(len(S_blocks[block_itr])):
+                tmp_data = S_blocks[block_itr][trial_itr]
+                block_condition_sym[block_itr].append(tmp_data['condition'])
+                block_ToT_sym_L[block_itr].append(tmp_data['TimeOnTarget_L'])
+                block_ToT_sym_R[block_itr].append(tmp_data['TimeOnTarget_R'])
+                block_err_sym_L[block_itr].append(tmp_data['ACCtw_L'])
+                block_err_sym_R[block_itr].append(tmp_data['ACCtw_R'])
+                if tmp_data['impact_L'] == 1:
+                    block_impacttime_sym_L[block_itr].append(tmp_data['impacttime_L'])
+                else:
+                    block_impacttime_sym_L[block_itr].append(np.nan)
+                if tmp_data['impact_R'] == 1:
+                    block_impacttime_sym_R[block_itr].append(tmp_data['impacttime_R'])
+                else:
+                    block_impacttime_sym_R[block_itr].append(np.nan)
+                block_impact_sym_L[block_itr].append(tmp_data['impact_L'])
+                block_impact_sym_R[block_itr].append(tmp_data['impact_R'])
+                block_handsep_sym[block_itr].append(tmp_data['forcediff'])
+                block_overshoot_L_sym[block_itr].append(tmp_data['overshoot_L'])
+                block_overshoot_R_sym[block_itr].append(tmp_data['overshoot_R'])
+                block_undershoot_L_sym[block_itr].append(tmp_data['undershoot_L'])
+                block_undershoot_R_sym[block_itr].append(tmp_data['undershoot_R'])
+                block_volatility_L_sym[block_itr].append(tmp_data['volatility_L'])
+                block_volatility_R_sym[block_itr].append(tmp_data['volatility_R'])
+    
+        for block_itr in range(len(B_blocks)): #This assumes equal number of blocks. 
+            for trial_itr in range(len(B_blocks[block_itr])):
+                tmp_data = B_blocks[block_itr][trial_itr]
+                block_condition_bas[block_itr].append(tmp_data['condition'])
+                block_ToT_bas_L[block_itr].append(tmp_data['TimeOnTarget_L'])
+                block_ToT_bas_R[block_itr].append(tmp_data['TimeOnTarget_R'])
+                block_handsep_bas[block_itr].append(tmp_data['forcediff'])
+                block_overshoot_L_bas[block_itr].append(tmp_data['overshoot_L'])
+                block_overshoot_R_bas[block_itr].append(tmp_data['overshoot_R'])
+                block_undershoot_L_bas[block_itr].append(tmp_data['undershoot_L'])
+                block_undershoot_R_bas[block_itr].append(tmp_data['undershoot_R'])
+                block_volatility_L_bas[block_itr].append(tmp_data['volatility_L'])
+                block_volatility_R_bas[block_itr].append(tmp_data['volatility_R'])
+        ##ToT
+        if not os.path.exists(os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_A_L.png')) or overwrite:
+            #Make one then make a function for it.
+            sess_plot([element*100 for element in block_ToT_asym_L], 'Time on Target for Asymmetric conditions\nLeft Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_A_L.png'))
+            sess_plot([element*100 for element in block_ToT_asym_R], 'Time on Target for Asymmetric conditions\nRight Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_A_R.png'))
+            sess_plot([element*100 for element in block_ToT_sym_L], 'Time on Target for Symmetric conditions\nLeft Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_S_L.png'))
+            sess_plot([element*100 for element in block_ToT_sym_R], 'Time on Target for Symmetric conditions\nRight Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_S_R.png'))
+            sess_plot([element*100 for element in block_ToT_asym_L], 'Time on Target for Asymmetric conditions\nLeft Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_A_L.png'))
+            sess_plot([element*100 for element in block_ToT_asym_R], 'Time on Target for Asymmetric conditions\nRight Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_A_R.png'))
+            sess_plot([element*100 for element in block_ToT_sym_L], 'Time on Target for Symmetric conditions\nLeft Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_S_L.png'))
+            sess_plot([element*100 for element in block_ToT_sym_R], 'Time on Target for Symmetric conditions\nRight Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_S_R.png'))   
+            sess_plot([element*100 for element in block_ToT_bas_L], 'Time on Target for Baseline conditions\nLeft Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_B_L.png'))
+            sess_plot([element*100 for element in block_ToT_bas_R], 'Time on Target for Baseline conditions\nRight Hand', \
+                      'Time on target /\n% of trial time', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_ToT_B_R.png'))   
+                 
+            ##Error last 500 ms
+            sess_plot([x[:] for x in block_err_asym_L], 'Error last 500 ms for Asymmetric conditions\nLeft Hand', \
+                      'Error', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_Err_A_L.png'))
+            sess_plot([x[:] for x in block_err_asym_R], 'Error last 500 ms for Asymmetric conditions\nRight Hand', \
+                      'Error', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_Err_A_R.png'))
+            sess_plot([x[:] for x in block_err_sym_L], 'Error last 500 ms for Symmetric conditions\nLeft Hand', \
+                      'Error', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_Err_S_L.png'))
+            sess_plot([x[:] for x in block_err_sym_R], 'Error last 500 ms for Symmetric conditions\nRight Hand', \
+                      'Error', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_Err_S_R.png'))
+            
+            ##Impact and impacttime
+            sess_plot([x[:] for x in block_impacttime_asym_L], 'Time of impact (0.5%) for Asymmetric conditions\nLeft Hand', \
+                      'Time of impact', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_imp_A_L.png'))
+            sess_plot([x[:] for x in block_impacttime_asym_R], 'Time of impact (0.5%) for Asymmetric conditions\nRight Hand', \
+                      'Time of impact', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_imp_A_R.png'))
+            sess_plot([x[:] for x in block_impacttime_sym_L], 'Time of impact (0.5%) for Asymmetric conditions\nLeft Hand', \
+                      'Time of impact', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_imp_S_L.png'))
+            sess_plot([x[:] for x in block_impacttime_sym_R], 'Time of impact (0.5%) for Asymmetric conditions\nRight Hand', \
+                      'Time of impact', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_imp_S_R.png'))
+
+            ##Hand separation
+            sess_plot([x[:] for x in block_handsep_asym], 'Absolute force difference between hands\nAsymmetric conditions', \
+                      'Force difference', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_HandSep_A.png'))
+            sess_plot([x[:] for x in block_handsep_sym], 'Absolute force difference between hands\nSymmetric condition', \
+                      'Force difference', os.path.join(day_save_folder,'sess_'+str(sess_itr+1)+'_HandSep_S.png'))
+            
+            
+        
+        #Save session data in row of sess_ variables + sd to make error bars. Average between blocks.
+        sess_ToT_asym_L[sess_itr] = np.mean(np.asarray(block_ToT_asym_L))
+        sess_std_ToT_asym_L[sess_itr] = np.std(np.asarray(block_ToT_asym_L))
+        sess_ToT_asym_R[sess_itr] = np.mean(np.asarray(block_ToT_asym_R))
+        sess_std_ToT_asym_R[sess_itr] = np.std(np.asarray(block_ToT_asym_R))
+        sess_ToT_sym_L[sess_itr] = np.mean(np.asarray(block_ToT_sym_L))
+        sess_std_ToT_sym_L[sess_itr] = np.std(np.asarray(block_ToT_sym_L))
+        sess_ToT_sym_R[sess_itr] = np.mean(np.asarray(block_ToT_sym_R))
+        sess_std_ToT_sym_R[sess_itr] = np.std(np.asarray(block_ToT_sym_R))
+        sess_err_asym_L[sess_itr] = np.mean(np.asarray(block_err_asym_L))
+        sess_std_err_asym_L[sess_itr] = np.std(np.asarray(block_err_asym_L))
+        sess_err_asym_R[sess_itr] = np.mean(np.asarray(block_err_asym_R))
+        sess_std_err_asym_R[sess_itr] = np.std(np.asarray(block_err_asym_R))
+        sess_err_sym_L[sess_itr] = np.mean(np.asarray(block_err_sym_L))
+        sess_std_err_sym_L[sess_itr] = np.std(np.asarray(block_err_sym_L))
+        sess_err_sym_R[sess_itr] = np.mean(np.asarray(block_err_sym_R))
+        sess_std_err_sym_R[sess_itr] = np.std(np.asarray(block_err_sym_R))
+        sess_handsep_asym[sess_itr] = np.nanmean(np.asarray(block_handsep_asym))
+        sess_std_handsep_asym[sess_itr] = np.nanstd(np.asarray(block_handsep_asym))
+        sess_handsep_sym[sess_itr] = np.nanmean(np.asarray(block_handsep_sym))
+        sess_std_handsep_sym[sess_itr] = np.nanstd(np.asarray(block_handsep_sym))
+        sess_overshoot_L_asym[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_L_asym),axis=1),axis=0)
+        sess_std_overshoot_L_asym[sess_itr] = np.std(np.std(np.asarray(block_overshoot_L_asym),axis=1),axis=0)
+        sess_overshoot_R_asym[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_R_asym),axis=1),axis=0)
+        sess_std_overshoot_R_asym[sess_itr] = np.std(np.std(np.asarray(block_overshoot_R_asym),axis=1),axis=0)
+        sess_overshoot_L_sym[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_L_sym),axis=1),axis=0)
+        sess_std_overshoot_L_sym[sess_itr] = np.std(np.std(np.asarray(block_overshoot_L_sym),axis=1),axis=0)
+        sess_overshoot_R_sym[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_R_sym),axis=1),axis=0)
+        sess_std_overshoot_R_sym[sess_itr] = np.std(np.std(np.asarray(block_overshoot_R_sym),axis=1),axis=0)
+        sess_undershoot_L_asym[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_L_asym),axis=1),axis=0)
+        sess_std_undershoot_L_asym[sess_itr] = np.std(np.std(np.asarray(block_undershoot_L_asym),axis=1),axis=0)
+        sess_undershoot_R_asym[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_R_asym),axis=1),axis=0)
+        sess_std_undershoot_R_asym[sess_itr] = np.std(np.std(np.asarray(block_undershoot_R_asym),axis=1),axis=0)
+        sess_undershoot_L_sym[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_L_sym),axis=1),axis=0)
+        sess_std_undershoot_L_sym[sess_itr] = np.std(np.std(np.asarray(block_undershoot_L_sym),axis=1),axis=0)
+        sess_undershoot_R_sym[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_R_sym),axis=1),axis=0)
+        sess_std_undershoot_R_sym[sess_itr] = np.std(np.std(np.asarray(block_undershoot_R_sym),axis=1),axis=0
+                                                     
+                                                     )
+        sess_tb_handsep_asym[sess_itr] = np.mean(np.mean(np.asarray(block_tb_handsep_asym),axis=1),axis=0)
+        sess_std_tb_handsep_asym[sess_itr] = np.std(np.std(np.asarray(block_tb_handsep_asym),axis=1),axis=0)
+        sess_tb_handsep_sym[sess_itr] = np.mean(np.mean(np.asarray(block_tb_handsep_sym),axis=1),axis=0)
+        sess_std_tb_handsep_sym[sess_itr] = np.std(np.std(np.asarray(block_tb_handsep_sym),axis=1),axis=0)
+        sess_volatility_L_asym[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_L_asym),axis=1),axis=0)
+        sess_std_volatility_L_asym[sess_itr] = np.std(np.std(np.asarray(block_volatility_L_asym),axis=1),axis=0)
+        sess_volatility_R_asym[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_R_asym),axis=1),axis=0)
+        sess_std_volatility_R_asym[sess_itr] = np.std(np.std(np.asarray(block_volatility_R_asym),axis=1),axis=0)
+        sess_volatility_L_sym[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_L_sym),axis=1),axis=0)
+        sess_std_volatility_L_sym[sess_itr] = np.std(np.std(np.asarray(block_volatility_L_sym),axis=1),axis=0)
+        sess_volatility_R_sym[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_R_sym),axis=1),axis=0)
+        sess_std_volatility_R_sym[sess_itr] = np.std(np.std(np.asarray(block_volatility_R_sym),axis=1),axis=0)
+        
+        sess_impacttime_asym_L[sess_itr] = np.mean(np.asarray(block_impacttime_asym_L)[~np.isnan(block_impacttime_asym_L)])
+        sess_impacttime_asym_R[sess_itr] = np.mean(np.asarray(block_impacttime_asym_R)[~np.isnan(block_impacttime_asym_R)])
+        sess_impacttime_sym_L[sess_itr] = np.mean(np.asarray(block_impacttime_sym_L)[~np.isnan(block_impacttime_sym_L)])
+        sess_impacttime_sym_R[sess_itr] = np.mean(np.asarray(block_impacttime_sym_R)[~np.isnan(block_impacttime_sym_R)])
+        sess_impact_asym_L[sess_itr] = np.mean(np.asarray(block_impact_asym_L))
+        sess_impact_asym_R[sess_itr] = np.mean(np.asarray(block_impact_asym_R))
+        sess_impact_sym_L[sess_itr] = np.mean(np.asarray(block_impact_sym_L))
+        sess_impact_sym_R[sess_itr] = np.mean(np.asarray(block_impact_sym_R))
+        sess_std_impacttime_asym_L[sess_itr] = np.std(np.asarray(block_impacttime_asym_L)[~np.isnan(block_impacttime_asym_L)])
+        sess_std_impacttime_asym_R[sess_itr] = np.std(np.asarray(block_impacttime_asym_R)[~np.isnan(block_impacttime_asym_R)])
+        sess_std_impacttime_sym_L[sess_itr] = np.std(np.asarray(block_impacttime_sym_L)[~np.isnan(block_impacttime_sym_L)])
+        sess_std_impacttime_sym_R[sess_itr] = np.std(np.asarray(block_impacttime_sym_R)[~np.isnan(block_impacttime_sym_R)])
+        sess_std_impact_asym_L[sess_itr] = np.std(np.asarray(block_impact_asym_L))
+        sess_std_impact_asym_R[sess_itr] = np.std(np.asarray(block_impact_asym_R))
+        sess_std_impact_sym_L[sess_itr] = np.std(np.asarray(block_impact_sym_L))
+        sess_std_impact_sym_R[sess_itr] = np.std(np.asarray(block_impact_sym_R))
+        
+        sess_ToT_bas_L[sess_itr] = np.mean(np.asarray(block_ToT_bas_L))
+        sess_ToT_bas_R[sess_itr] = np.mean(np.asarray(block_ToT_bas_R))
+        sess_handsep_bas[sess_itr] = np.mean(np.asarray(block_handsep_bas))
+        sess_overshoot_L_bas[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_L_bas),axis=1),axis=0)
+        sess_overshoot_R_bas[sess_itr] = np.mean(np.mean(np.asarray(block_overshoot_R_bas),axis=1),axis=0)
+        sess_undershoot_L_bas[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_L_bas),axis=1),axis=0)
+        sess_undershoot_R_bas[sess_itr] = np.mean(np.mean(np.asarray(block_undershoot_R_bas),axis=1),axis=0)
+        sess_volatility_L_bas[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_L_bas),axis=1),axis=0)
+        sess_volatility_R_bas[sess_itr] = np.mean(np.mean(np.asarray(block_volatility_R_bas),axis=1),axis=0)
+        
+        sess_std_ToT_bas_L[sess_itr] = np.std(np.asarray(block_ToT_bas_L))
+        sess_std_ToT_bas_R[sess_itr] = np.std(np.asarray(block_ToT_bas_R))
+        sess_std_handsep_bas[sess_itr] = np.std(np.asarray(block_handsep_bas))
+        sess_std_overshoot_L_bas[sess_itr] = np.std(np.std(np.asarray(block_overshoot_L_bas),axis=1),axis=0)
+        sess_std_overshoot_R_bas[sess_itr] = np.std(np.std(np.asarray(block_overshoot_R_bas),axis=1),axis=0)
+        sess_std_undershoot_L_bas[sess_itr] = np.std(np.std(np.asarray(block_undershoot_L_bas),axis=1),axis=0)
+        sess_std_undershoot_R_bas[sess_itr] = np.std(np.std(np.asarray(block_undershoot_R_bas),axis=1),axis=0)
+        sess_std_volatility_L_bas[sess_itr] = np.std(np.std(np.asarray(block_volatility_L_bas),axis=1),axis=0)
+        sess_std_volatility_R_bas[sess_itr] = np.std(np.std(np.asarray(block_volatility_R_bas),axis=1),axis=0)
+        
+        #Make the day-specific plots and report and use the session values.
+        ##ToT
+    if not os.path.exists(os.path.join(day_save_folder,'Day_ToT_A.png')) or overwrite:
+        day_plot([100*x for x in sess_ToT_asym_L], [100*x for x in sess_std_ToT_asym_L], [100*x for x in sess_ToT_asym_R], [100*x for x in sess_std_ToT_asym_R], 'Time on target /\n% of trial time', 'Time on Target for Asymmetric conditions', os.path.join(day_save_folder,'Day_ToT_A.png'))
+        day_plot([100*x for x in sess_ToT_sym_L], [100*x for x in sess_std_ToT_sym_L], [100*x for x in sess_ToT_sym_R], [100*x for x in sess_std_ToT_sym_R], 'Time on target /\n% of trial time', 'Time on Target for Symmetric conditions', os.path.join(day_save_folder,'Day_ToT_S.png'))
+        day_plot([100*x for x in sess_ToT_bas_L], [100*x for x in sess_std_ToT_bas_L], [100*x for x in sess_ToT_bas_R], [100*x for x in sess_std_ToT_bas_R], 'Time on target /\n% of trial time', 'Time on Target for Baseline conditions', os.path.join(day_save_folder,'Day_ToT_B.png'))
+        
+        ##Err
+        day_plot([x for x in sess_err_asym_L], [x for x in sess_std_err_asym_L], [x for x in sess_err_asym_R], [x for x in sess_std_err_asym_R], 'Error', 'Error last 500 ms for Asymmetric conditions', os.path.join(day_save_folder,'Day_Err_A.png'))
+        day_plot([x for x in sess_err_sym_L], [x for x in sess_std_err_sym_L], [x for x in sess_err_sym_R], [x for x in sess_std_err_sym_R], 'Error', 'Error last 500 ms for Symmetric conditions', os.path.join(day_save_folder,'Day_Err_S.png'))
+        
+        ##Impact
+        day_plot([x for x in sess_impact_asym_L], [x for x in sess_std_impact_asym_L], [x for x in sess_impact_asym_R], [x for x in sess_std_impact_asym_R], 'Impact rate', 'Rate of impact (0.5%) Asymmetric conditions', os.path.join(day_save_folder,'Day_imp_A.png'))
+        day_plot([x for x in sess_impact_sym_L], [x for x in sess_std_impact_sym_L], [x for x in sess_impact_sym_R], [x for x in sess_std_impact_sym_R], 'Impact rate', 'Rate of impact (0.5%) Symmetric conditions', os.path.join(day_save_folder,'Day_imp_S.png'))
+        
+        ##Impacttime
+        day_plot([x for x in sess_impacttime_asym_L], [x for x in sess_std_impacttime_asym_L], [x for x in sess_impacttime_asym_R], [x for x in sess_std_impacttime_asym_R], 'Impact time', 'Time of impact (0.5%) Asymmetric conditions', os.path.join(day_save_folder,'Day_impt_A.png'))
+        day_plot([x for x in sess_impacttime_sym_L], [x for x in sess_std_impacttime_sym_L], [x for x in sess_impacttime_sym_R], [x for x in sess_std_impacttime_sym_R], 'Impact time', 'Time of impact (0.5%) Symmetric conditions', os.path.join(day_save_folder,'Day_impt_S.png'))
+
+        ##handsep
+        day_handsep_plot([x for x in sess_handsep_asym], [x for x in sess_std_handsep_asym], 'Force difference', 'Absolute force difference between hands\nAsymmetric condition', os.path.join(day_save_folder,'Day_HandSep_A.png'))
+        day_handsep_plot([x for x in sess_handsep_sym], [x for x in sess_std_handsep_sym], 'Force difference', 'Absolute force difference between hands\nSymmetric condition', os.path.join(day_save_folder,'Day_HandSep_S.png'))
+        
+        ##overshoot
+        for itr in range(nbrOfTimeBins):
+            day_plot([x[itr] for x in sess_overshoot_L_asym], [x[itr] for x in sess_std_overshoot_L_asym], [x[itr] for x in sess_overshoot_R_asym], [x[itr] for x in sess_std_overshoot_R_asym], 'Overshoot', 'Overshoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nAsymmetric condition', os.path.join(day_save_folder,'Day_OS_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_A.png'))
+            day_plot([x[itr] for x in sess_overshoot_L_sym], [x[itr] for x in sess_std_overshoot_L_sym], [x[itr] for x in sess_overshoot_R_sym], [x[itr] for x in sess_std_overshoot_R_sym], 'Overshoot', 'Overshoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nSymmetric condition', os.path.join(day_save_folder,'Day_OS_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_S.png'))
+            day_plot([x[itr] for x in sess_overshoot_L_bas], [x[itr] for x in sess_std_overshoot_L_bas], [x[itr] for x in sess_overshoot_R_bas], [x[itr] for x in sess_std_overshoot_R_bas], 'Overshoot', 'Overshoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nBaseline condition', os.path.join(day_save_folder,'Day_OS_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_B.png'))
+        ##undershoot 
+        for itr in range(nbrOfTimeBins):
+            day_plot([x[itr] for x in sess_undershoot_L_asym], [x[itr] for x in sess_std_undershoot_L_asym], [x[itr] for x in sess_undershoot_R_asym], [x[itr] for x in sess_std_undershoot_R_asym], 'Undershoot', 'Undershoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nAsymmetric condition', os.path.join(day_save_folder,'Day_US_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_A.png'))
+            day_plot([x[itr] for x in sess_undershoot_L_sym], [x[itr] for x in sess_std_undershoot_L_sym], [x[itr] for x in sess_undershoot_R_sym], [x[itr] for x in sess_std_undershoot_R_sym], 'Undershoot', 'Undershoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nSymmetric condition', os.path.join(day_save_folder,'Day_US_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_S.png'))
+            day_plot([x[itr] for x in sess_undershoot_L_bas], [x[itr] for x in sess_std_undershoot_L_bas], [x[itr] for x in sess_undershoot_R_bas], [x[itr] for x in sess_std_undershoot_R_bas], 'Undershoot', 'Undershoot timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nBaseline condition', os.path.join(day_save_folder,'Day_US_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_B.png'))
+        ##volatility
+        for itr in range(nbrOfTimeBins):
+            day_plot([x[itr] for x in sess_volatility_L_asym], [x[itr] for x in sess_std_volatility_L_asym], [x[itr] for x in sess_volatility_R_asym], [x[itr] for x in sess_std_volatility_R_asym], 'Volatility', 'Volatility timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nAsymmetric condition', os.path.join(day_save_folder,'Day_vol_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_A.png'))
+            day_plot([x[itr] for x in sess_volatility_L_sym], [x[itr] for x in sess_std_volatility_L_sym], [x[itr] for x in sess_volatility_R_sym], [x[itr] for x in sess_std_volatility_R_sym], 'Volatility', 'Volatility timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nSymmetric condition', os.path.join(day_save_folder,'Day_vol_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_S.png'))
+            day_plot([x[itr] for x in sess_volatility_L_bas], [x[itr] for x in sess_std_volatility_L_bas], [x[itr] for x in sess_volatility_R_bas], [x[itr] for x in sess_std_volatility_R_bas], 'Volatility', 'Volatility timebin '+str(itr+1)+' of '+str(nbrOfTimeBins)+'\nBaseline condition', os.path.join(day_save_folder,'Day_vol_'+str(itr+1)+'of'+str(nbrOfTimeBins)+'_B.png'))
+       
+    
+    
+    #Make pdf report
+    report=PDF()
+    tot_plots_per_page_1 = ['Day_ToT_A.png', 'Day_ToT_S.png', 'Day_Err_A.png', 'Day_Err_S.png', 'Day_vol_3of3_A.png', 'Day_vol_3of3_S.png', 'Day_Handsep_A.png', 'Day_Handsep_S.png']
+    tot_plots_per_page_1 = [os.path.join(day_save_folder,x) for x in tot_plots_per_page_1]
+    report.print_page(tot_plots_per_page_1)
+    tot_plots_per_page_2 = ['Day_impt_A.png', 'Day_impt_S.png', 'Day_imp_A.png', 'Day_imp_S.png', 'Day_ToT_B.png', 'Day_vol_1of3_B.png', 'Day_vol_2of3_B.png', 'Day_vol_3of3_B.png']
+    tot_plots_per_page_2 = [os.path.join(day_save_folder,x) for x in tot_plots_per_page_2]
+    report.print_page(tot_plots_per_page_2)
+        
+    report.output(subj+'_fMRI.pdf', 'F')
+    os.rename(subj+'_fMRI.pdf', os.path.join(report_dir,subj+'_fMRI.pdf'))
+
+    
+            
 
 
