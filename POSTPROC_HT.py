@@ -8,6 +8,11 @@ Created on Wed Feb  2 16:19:17 2022
 A postproc script for gathering hometraining data.
 
 """
+#FIRST: Log into FileZilla and copy the hometraining files for each participant. 
+#Make this a part of the script later.
+#/NEXS/Sections/MN/VIP_Projects/ReScale/ReScale2/04_Data/01_DataFiles/00_Raw_Data
+
+
 
 ##############Import necessary libraries###################
 import os
@@ -40,7 +45,8 @@ def calc_gamelevel(duration):
 path='/Users/gdf724/Data/ReScale/ReScale2_HomeTraining'
 report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/HomeTraining/'
 #List all subjects to process.
-list_of_subjs=['y001']
+list_of_subjs=['y002', 'y003', 'y004', 'o001', 'o002']
+latest_training = [0]*len(list_of_subjs)
 #Do you want to make trial GIFs for each run and condition? 
 createGIFS = False 
 #Do you want to make average trajectory plots for each run and condition?
@@ -54,6 +60,7 @@ logtransform = True #Whether to logtransform data
 for i in range(len(list_of_subjs)):
     subj = list_of_subjs[i]
     HT_days = pph.get_HTfolders(path,subj)
+    latest= 
     
     for day in range(len(HT_days)):
             sess = HT_days[day]

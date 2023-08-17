@@ -21,22 +21,24 @@ import fMRI_collect_stats as statsmaker
 
 ##############Set paths and plot options###################
 #Change to where you have your data.
-path='/Users/gdf724/Data/ReScale/ReScale1_fMRI_behavior'
-report_dir='/Users/gdf724/Data/ReScale/ReScale1_reports/fMRI/'
 #List all subjects to process.
-RS1=True #ReScale1 structure slightly different due to not longitudinal.
+RS1=False #ReScale1 structure slightly different due to not longitudinal.
 if RS1:
+    path='/Users/gdf724/Data/ReScale/ReScale1_fMRI_behavior'
+    report_dir='/Users/gdf724/Data/ReScale/ReScale1_reports/fMRI/'
     sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
     list_of_subjs = [x[-7:-1] for x in sub_dir_list]
 else:
-    list_of_subjs = ['y001']
+    path='/Users/gdf724/Data/ReScale/ReScale2_fMRI_behavior'
+    report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/fMRI/'
+    list_of_subjs = ['y002', 'y003', 'o001', 'o002', 'y004']
 #Do you want to make videos and a pdf report?
 makeVideos = False 
 makeReport = True
 #Do you want to f average trajectory plots for each run and condition?
 overwrite = False
 logtransform = True #Whether to logtransform data
-make_stats_file = True
+make_stats_file = False
 if make_stats_file:
     #This needs a path to the background csv file.
     background_path = '/Users/gdf724/Data/ReScale/ReScale1_background/RS1_background.csv'
