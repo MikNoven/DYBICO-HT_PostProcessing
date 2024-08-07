@@ -197,7 +197,25 @@ def get_DATAfiles(logdir):
     
     return sorted(DATAfiles)
 
-
+#%% Get trial data
+#Trial_Behaviour_Sess_1.pkl
+def get_block_files(logdir):
+    import os     
+    import glob
+    block_files = []
+    for file in glob.glob(os.path.join(logdir,'PostProcessing','Trial_Behaviour_Sess_*.pkl')):
+        block_files.append(file)
+    
+    return sorted(block_files)
+#%% get list of output files in log folder
+def get_Blockfiles(filepath):
+    import os     
+    import glob
+    Blockfiles = []
+    for file in glob.glob(os.path.join(filepath,'output_file_*.pkl')):
+        Blockfiles.append(file)
+    
+    return sorted(Blockfiles)
 
 #%% Make a folder for each condition
 def make_cond_folder(filepath, con_data):
@@ -672,12 +690,15 @@ def get_avg_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform):
         volatility_L.append(np.var(diff_force_L[first_indx:bin_indices[-1]]))
         volatility_R.append(np.var(diff_force_R[first_indx:bin_indices[-1]]))
     
+    ##################Volatility in timewindow#############################
+    volatility_500_L = np.var(diff_force_L[-indxstep_ACC:])
+    volatility_500_R = np.var(diff_force_R[-indxstep_ACC:])
     
     
     return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
         time_on_target_L, time_on_target_R, force_diff, timebins, overshoot_L, overshoot_R, undershoot_L, undershoot_R, \
-        handsep, volatility_L, volatility_R
+        handsep, volatility_L, volatility_R, volatility_500_L, volatility_500_R
 
 #%%Get the success for 150 ms, 200 ms or 250 ms.
 def check_success_times(force_L, force_R, target_L, target_R, t):
@@ -982,11 +1003,16 @@ def get_trial_behaviour_HT(force_L, force_R, target_L, target_R, t, logtransform
         volatility_L.append(np.var(diff_force_L[first_indx:bin_indices[-1]]))
         volatility_R.append(np.var(diff_force_R[first_indx:bin_indices[-1]]))
     
+    ##################Volatility in timewindow#############################
+    volatility_500_L = np.var(diff_force_L[-indxstep_ACC:])
+    volatility_500_R = np.var(diff_force_R[-indxstep_ACC:])
+    
+    
     return React_L, React_R, ACCtw_L, ACCtw_R, ACCimpact_L, \
         ACCimpact_R, impacttime_L, impacttime_R, impact_L, impact_R, \
         time_on_target_L, time_on_target_R, force_diff, trial_success_time_L, trial_success_time_R, \
         trial_success_time_both, timebins, overshoot_L, overshoot_R, undershoot_L, undershoot_R, \
-        handsep, volatility_L, volatility_R
+        handsep, volatility_L, volatility_R, volatility_500_L, volatility_500_R
         
 #%%Get the variance in the last 500ms of each trial. MN
 def get_trial_variance_and_error(condition_data):
@@ -1121,9 +1147,9 @@ def get_survey_answers(HT_dir):
     if not ot_line[-1] == ' ':
         ot = time_answer_reader(ot_line)
         stop = False
-        str_itr=8
+        str_itr=10
         while not stop:
-            if ot_line[str_itr]==' ':
+            if ot_line[str_itr]==')':
                 stop = True
             else:
                 what_ot=what_ot+ot_line[str_itr]

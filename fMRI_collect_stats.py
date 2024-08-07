@@ -26,7 +26,10 @@ def check_subject(subject,ReS1):
 ############ MAIN ###############
 def fMRI_collect_stats(datapath,background,RS1):
     #Get background
-    bg = pd.read_csv(background,';')
+    if RS1:
+        bg = pd.read_csv(background,';')
+    else:
+        bg = pd.read_excel(background)
     
     subj_col = []
     age_col = []
@@ -52,6 +55,7 @@ def fMRI_collect_stats(datapath,background,RS1):
     os_1_col = []
     os_2_col = []
     os_3_col = []
+    vol_500_col = []
     
     #loop over subjects
     for sub in sorted(glob.glob(os.path.join(datapath,'*/'))):
@@ -102,7 +106,7 @@ def fMRI_collect_stats(datapath,background,RS1):
                             os_1_col.append(trial_data['overshoot_'+hand][0])
                             os_2_col.append(trial_data['overshoot_'+hand][1])
                             os_3_col.append(trial_data['overshoot_'+hand][2])
-
+                            vol_500_col.append(trial_data['volatility_500_'+hand])
             
     #Save to csv.
     if RS1:
@@ -127,7 +131,8 @@ def fMRI_collect_stats(datapath,background,RS1):
                                 'Overshoot_tb3': os_3_col,
                                 'Undershoot_tb1': us_1_col,
                                 'Undershoot_tb2': us_2_col,
-                                'Undershoot_tb3': us_3_col})
+                                'Undershoot_tb3': us_3_col,
+                                'Volatility_500': vol_500_col})
     else:
         save_pkl= pd.DataFrame({'Subject': subj_col,
                                 'Age': age_col,
@@ -151,7 +156,8 @@ def fMRI_collect_stats(datapath,background,RS1):
                                 'Overshoot_tb3': os_3_col,
                                 'Undershoot_tb1': us_1_col,
                                 'Undershoot_tb2': us_2_col,
-                                'Undershoot_tb3': us_3_col})
+                                'Undershoot_tb3': us_3_col,
+                                'Volatility_500': vol_500_col})
     
     save_pkl.to_csv(os.path.join(datapath,'fMRI_behavior.csv'), index=False)
     

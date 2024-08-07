@@ -26,34 +26,36 @@ RS1=False #ReScale1 structure slightly different due to not longitudinal.
 if RS1:
     path='/Users/gdf724/Data/ReScale/ReScale1_fMRI_behavior'
     report_dir='/Users/gdf724/Data/ReScale/ReScale1_reports/fMRI/'
+    background_path = '/Users/gdf724/Data/ReScale/ReScale1_background/RS1_background.csv'
     sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
     list_of_subjs = [x[-7:-1] for x in sub_dir_list]
 else:
     path='/Users/gdf724/Data/ReScale/ReScale2_fMRI_behavior'
     report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/fMRI/'
-    list_of_subjs = ['y002', 'y003', 'o001', 'o002', 'y004']
+    background_path = '/Users/gdf724/Data/ReScale/ReScale2_Pretests/ReScale2_background.xlsx'
+    #list_of_subjs = ['o004', 'y011']
+    sub_dir_list = sorted(glob.glob(os.path.join(path,'*/')))
+    list_of_subjs = [x[-5:-1] for x in sub_dir_list]
 #Do you want to make videos and a pdf report?
 makeVideos = False 
 makeReport = True
 #Do you want to f average trajectory plots for each run and condition?
 overwrite = False
 logtransform = True #Whether to logtransform data
-make_stats_file = False
-if make_stats_file:
-    #This needs a path to the background csv file.
-    background_path = '/Users/gdf724/Data/ReScale/ReScale1_background/RS1_background.csv'
+make_stats_file = True
 
 for i in range(len(list_of_subjs)):
     subj = list_of_subjs[i]
+    print(subj)
     if RS1:
         fMRI_days =[sub_dir_list[i]]
     else:
         fMRI_days = pph.get_HTfolders(path,subj)
-    
+    update_report=False   
     for day in range(len(fMRI_days)):
             sess = fMRI_days[day]
             if not os.path.exists(os.path.join(path,subj,sess,'PostProcessing','Avg_Behaviour_Sess_1.pkl')) or overwrite:
-                    
+                update_report=True    
                 #Fix the data to the proper structure and in a PostProcessing-folder
                 pph.make_PP_folder(sess)
                 maxforce = pph.get_maxforce(sess)
@@ -92,6 +94,8 @@ for i in range(len(list_of_subjs)):
                     trial_timebins, trial_overshoot_L, trial_overshoot_R, trial_undershoot_L, trial_undershoot_R, trial_handsep, trial_volatility_L, trial_volatility_R = [],[],[],[],[],[],[],[]
                     trial_forceshift_L, trial_forceshift_R, trial_condshift = [],[],[]
                     
+                    trial_volatility_500_L, trial_volatility_500_R = [],[]
+                    
                     last_target_L = 0
                     last_target_R = 0
                     
@@ -117,7 +121,7 @@ for i in range(len(list_of_subjs)):
                              tmp_trial_ACCimpact_R, tmp_trial_impacttime_L, tmp_trial_impacttime_R, tmp_trial_impact_L, tmp_trial_impact_R, \
                              tmp_trial_time_on_target_L, tmp_trial_time_on_target_R, \
                              tmp_trial_forcediff, tmp_trial_success_time_L, tmp_trial_success_time_R, tmp_trial_success_time_both, \
-                             tmp_trial_timebins, tmp_trial_overshoot_L, tmp_trial_overshoot_R, tmp_trial_undershoot_L, tmp_trial_undershoot_R, tmp_trial_handsep, tmp_trial_volatility_L, tmp_trial_volatility_R) = pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t,logtransform)#pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t)
+                             tmp_trial_timebins, tmp_trial_overshoot_L, tmp_trial_overshoot_R, tmp_trial_undershoot_L, tmp_trial_undershoot_R, tmp_trial_handsep, tmp_trial_volatility_L, tmp_trial_volatility_R, tmp_trial_volatility_500_L, tmp_trial_volatility_500_R) = pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t,logtransform)#pph.get_trial_behaviour_HT(data['force_L'][itr],data['force_R'][itr],tmp_target_L,tmp_target_R,tmp_t)
                             
                             trial_React_L.append(tmp_trial_React_L)
                             trial_React_R.append(tmp_trial_React_R)
@@ -143,6 +147,8 @@ for i in range(len(list_of_subjs)):
                             trial_handsep.append(tmp_trial_handsep) 
                             trial_volatility_L.append(tmp_trial_volatility_L) 
                             trial_volatility_R.append(tmp_trial_volatility_R)
+                            trial_volatility_500_L.append(tmp_trial_volatility_500_L) 
+                            trial_volatility_500_R.append(tmp_trial_volatility_500_R)
                             if itr == 0:
                                 trial_forceshift_L.append(tmp_target_L[0]-0.5)
                                 trial_forceshift_R.append(tmp_target_R[0]-0.5) 
@@ -192,6 +198,8 @@ for i in range(len(list_of_subjs)):
                     trial_behaviour['handsep'] = trial_handsep 
                     trial_behaviour['volatility_L'] = trial_volatility_L 
                     trial_behaviour['volatility_R'] = trial_volatility_R
+                    trial_behaviour['volatility_500_L'] = trial_volatility_500_L 
+                    trial_behaviour['volatility_500_R'] = trial_volatility_500_R
                     trial_behaviour['forceshift_L'] = trial_forceshift_L
                     trial_behaviour['forceshift_R'] = trial_forceshift_R
                     trial_behaviour['condshift'] = trial_condshift
@@ -220,7 +228,7 @@ for i in range(len(list_of_subjs)):
                          tmp_ACCtw_L, tmp_ACCtw_R, tmp_ACCimpact_L, tmp_ACCimpact_R, \
                          tmp_impacttime_L, tmp_impacttime_R, tmp_impact_L, tmp_impact_R, \
                          tmp_time_on_target_L, tmp_time_on_target_R, \
-                         tmp_force_diff, tmp_timebins, tmp_overshoot_L, tmp_overshoot_R, tmp_undershoot_L, tmp_undershoot_R, tmp_handsep, tmp_volatility_L, tmp_volatility_R) = pph.get_avg_behaviour_HT(avg_L, avg_R, avg_target_L, avg_target_R, time,logtransform)
+                         tmp_force_diff, tmp_timebins, tmp_overshoot_L, tmp_overshoot_R, tmp_undershoot_L, tmp_undershoot_R, tmp_handsep, tmp_volatility_L, tmp_volatility_R, tmp_volatility_500_L, tmp_volatility_500_R) = pph.get_avg_behaviour_HT(avg_L, avg_R, avg_target_L, avg_target_R, time,logtransform)
                         
                         #We don't know the correct direction here so just do averages. 
                             
@@ -249,7 +257,8 @@ for i in range(len(list_of_subjs)):
                         save_pkl['handsep'] = [tmp_handsep] 
                         save_pkl['volatility_L'] = [tmp_volatility_L] 
                         save_pkl['volatility_R'] = [tmp_volatility_R]
-            
+                        save_pkl['volatility_500_L'] = [tmp_volatility_500_L] 
+                        save_pkl['volatility_500_R'] = [tmp_volatility_500_R]
                         #Append to behaviour dataframe
                         behaviour = behaviour.append(save_pkl, ignore_index=True)                    
                         
@@ -264,7 +273,8 @@ for i in range(len(list_of_subjs)):
         if RS1:
             reportmaker.RS1_fMRI_pdf_report_plots(sub_dir_list[i],report_dir,subj)
         else:
-            reportmaker.fMRI_pdf_report_plots(path,report_dir,subj)
+            if update_report:
+                reportmaker.fMRI_pdf_report_plots(path,report_dir,subj)
     
 if make_stats_file:
     statsmaker.fMRI_collect_stats(path,background_path,RS1)

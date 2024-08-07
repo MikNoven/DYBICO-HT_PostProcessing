@@ -300,7 +300,7 @@ path='/Users/gdf724/Data/ReScale/ReScale2_HomeTraining'
 #List all subjects to process.
 report_dir='/Users/gdf724/Data/ReScale/ReScale2_reports/HomeTraining/'
 def pdf_report_plots(path,report_dir,subj):
-    overwrite = False
+    overwrite = True
     
     HT_days = pph.get_HTfolders(path, subj)
     max_forces_L=[] 

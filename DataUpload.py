@@ -15,6 +15,7 @@ erdadir = '/Volumes/io.erda.dk/NEXS/Sections/MN/VIP_Projects/ReScale/ReScale2/04
 
 #fMRI data
 for subj in glob.glob(os.path.join(datadir,'ReScale2_fMRI_behavior','*')):
+    print(subj+'_fMRI')
     if subj.find('.') == -1:
         subject = os.path.basename(subj)
         if not os.path.isdir(os.path.join(erdadir,'00_MRI_Behavioral_Data',subject)):
@@ -26,6 +27,7 @@ for subj in glob.glob(os.path.join(datadir,'ReScale2_fMRI_behavior','*')):
             
 #Adapt
 for subj in glob.glob(os.path.join(datadir,'ReScale2_Adapt','*')):
+    print(subj+'_adapt')
     if subj.find('.') == -1:
         subject = os.path.basename(subj)
         if not os.path.isdir(os.path.join(erdadir,'00_ADAPT_Behavioral_Data',subject)):

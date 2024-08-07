@@ -37,24 +37,24 @@ server = LogOntoERDA(config)
 HT_list = server.listdir(erdadir)
 server.close()
 
-active_subjects = ['y002', 'y003', 'y004', 'o001', 'o002'] #y002 and o001 are special cases and handled accordingly. 
+active_subjects = ['y027', 'o029'] #y002 and o001 are special cases and handled accordingly. 
 latest_training = [0]*len(active_subjects)
 
 
 #Fix this after.
 for subj_itr in range(len(active_subjects)):
     subject = active_subjects[subj_itr]
-    if subject == 'y002':
-        erdasub = 'o001'
-    elif subject == 'o001':
-        erdasub = 'o00a'
+    if subject == 'y014':
+        erdasub = 'o007'
+    elif subject == 'o007':
+        erdasub = 'y014'
     else:
         erdasub = subject
     
     sub_HT_list = [x for x in HT_list if len(x)>4 and x[-4:]==erdasub]
     
     #Check for multiple training days and clean up HT list
-    last_day = 0
+    last_day = '0'
     del_indices = []
     for itr in range(len(sub_HT_list)):
         tmp = os.path.basename(sub_HT_list[itr])
@@ -63,9 +63,12 @@ for subj_itr in range(len(active_subjects)):
             del_indices.append(itr-1)
         last_day = datestamp
     
-    latest_training_day = datetime.datetime.strptime(last_day, '%Y%m%d')
-    timesincetraining = datetime.datetime.today()-latest_training_day
-    latest_training[subj_itr] = timesincetraining.days
+    if last_day != '0':
+        latest_training_day = datetime.datetime.strptime(last_day, '%Y%m%d')
+        timesincetraining = datetime.datetime.today()-latest_training_day
+        latest_training[subj_itr] = timesincetraining.days
+    else:
+        latest_training[subj_itr] = 'Has not trained!'
     
     for ind in sorted(del_indices, reverse=True):
         del sub_HT_list[ind]
